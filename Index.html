@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <title>RXG INDOMINUS</title>
+  <link href="https://googleapis.com" rel="stylesheet">
+  
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: #0a0a0a; color: #ffffff; height: 100vh;
+      display: flex; justify-content: center; align-items: center; overflow: hidden;
+    }
+    .pantalla {
+      text-align: center; position: absolute; width: 100%; max-width: 600px; padding: 20px;
+      transition: all 0.8s ease-in-out;
+    }
+    .oculto { opacity: 0; transform: translateY(-30px); pointer-events: none; visibility: hidden; }
+    h1 {
+      font-size: 3.2rem; font-weight: 600; letter-spacing: 10px; margin-bottom: 5px;
+      text-transform: uppercase; color: #dfb76c; text-shadow: 0px 4px 15px rgba(223, 183, 108, 0.2);
+    }
+    .subtitulo-autor { font-size: 0.85rem; font-weight: 200; letter-spacing: 4px; color: #cccccc; margin-bottom: 60px; text-transform: uppercase; }
+    .subtitulo-autor span { font-weight: 400; color: #ffffff; }
+    .btn-oro {
+      display: inline-block; padding: 14px 45px; font-size: 0.85rem; font-weight: 400; letter-spacing: 3px;
+      color: #dfb76c; text-decoration: none; text-transform: uppercase; border: 1px solid #dfb76c; border-radius: 2px;
+      background: transparent; transition: all 0.4s ease; cursor: pointer;
+    }
+    .btn-oro:hover { background: #dfb76c; color: #0a0a0a; box-shadow: 0 0 30px rgba(223, 183, 108, 0.4); transform: translateY(-2px); }
+    .menu-titulo {
+      font-size: 2.2rem; font-weight: 800; letter-spacing: 12px; margin-bottom: 15px; text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 30%, #a6a6a6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 2px 10px rgba(255, 255, 255, 0.3));
+    }
+    .menu-linea { width: 80px; height: 2px; background: linear-gradient(90deg, transparent, #dfb76c, transparent); margin: 0 auto 50px auto; }
+    .fila-opciones { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 15px; }
+    .btn-opcion {
+      flex: 1 1 180px; padding: 18px 10px; font-size: 0.8rem; font-weight: 400; letter-spacing: 2px;
+      color: #cccccc; background: #121212; border: 1px solid #262626; border-radius: 4px; text-transform: uppercase;
+      cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; background: #161613; transform: scale(1.03); box-shadow: 0 5px 15px rgba(223, 183, 108, 0.08); }
+    .btn-logout {
+      position: fixed; top: 25px; left: 25px; font-size: 0.75rem; font-weight: 400; letter-spacing: 2px; color: #8c8c8c;
+      background: transparent; border: none; text-transform: uppercase; cursor: pointer; transition: opacity 0.5s ease, color 0.3s ease; z-index: 10; opacity: 0; pointer-events: none;
+    }
+    .btn-logout.visible { opacity: 1; pointer-events: auto; }
+    .btn-logout:hover { color: #dfb76c; }
+    .modal-fondo {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8);
+      display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+    }
+    .modal-fondo.activo { opacity: 1; pointer-events: auto; }
+    .modal-caja { background: #0a0a0a; border: 1px solid #dfb76c; padding: 35px 30px; border-radius: 4px; text-align: center; max-width: 450px; width: 90%; box-shadow: 0 10px 40px rgba(223, 183, 108, 0.15); }
+    .modal-txt { font-size: 1.1rem; letter-spacing: 4px; text-transform: uppercase; margin-bottom: 30px; color: #ffffff; }
+    .modal-botones { display: flex; justify-content: center; gap: 15px; }
+    .modal-botones .btn-opcion { flex: 1 1 140px; padding: 14px 10px; }
+  </style>
+</head>
+<body>
+
+  <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
+
+  <!-- PANTALLA 1: INICIO -->
+  <div id="pantallaInicio" class="pantalla">
+    <h1>RXG INDOMINUS</h1>
+    <div class="subtitulo-autor">Creado por: <span>AresRK</span></div>
+    <a id="btnLogin" class="btn-oro" href="#" onclick="abrirAutorizacionDev(event)">Iniciar Sesión</a>
+  </div>
+
+  <!-- PANTALLA 2: MENÚ DE OPCIONES -->
+  <div id="pantallaMenu" class="pantalla oculto">
+    <div id="menuTitulo" class="menu-titulo">Panel General</div>
+    <div class="menu-linea"></div>
+    
+    <div class="fila-opciones">
+      <button class="btn-opcion" onclick="cargarSeccion('ranking')">Ranking</button>
+      <button class="btn-opcion" onclick="cargarSeccion('lives')">Lives</button>
+      <button class="btn-opcion" onclick="cargarSeccion('recompensas')">Recompensas</button>
+      <button class="btn-opcion" onclick="cargarSeccion('comunidad')">Comunidad</button>
+      <button class="btn-opcion" onclick="cargarSeccion('soporte')">Soporte</button>
+    </div>
+  </div>
+
+  <!-- VENTANA EMERGENTE DE CONFIRMACIÓN -->
+  <div id="miModal" class="modal-fondo">
+    <div class="modal-caja">
+      <div class="modal-txt">¿Estás seguro?</div>
+      <div class="modal-botones">
+        <button class="btn-opcion" onclick="confirmarCerrarSesion()">Aceptar</button>
+        <button class="btn-opcion" onclick="cerrarAdvertencia()">Regresar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ⚙️ CONFIGURACIÓN DE TU APP EN TWITCH DEVELOPER
+    const CLIENT_ID = 'jtwdrj3a05pcqgweyvqqajbb6clpvk'; 
+    // Reemplaza esta URL por la tuya de GitHub Pages (Ej: https://github.io)
+    const REDIRECT_URI = 'https://github.io'; 
+    const SCOPES = 'user:read:email';
+
+    // URL de tu futuro servidor backend seguro (Vercel / Render)
+    const BACKEND_URL = 'https://vercel.app';
+
+    window.onload = function() {
+      // Analizamos si Twitch nos envió de regreso con un código en la URL (?code=xxxxx)
+      const urlParams = new URLSearchParams(window.location.search);
+      const codigoTemporal = urlParams.get('code');
+
+      if (codigoTemporal) {
+        // Cambiamos el texto del botón para indicar progreso
+        document.getElementById('btnLogin').innerText = "Procesando...";
+        
+        // Enviamos el código al backend para validar e interactuar con Google Sheets
+        enviarCodigoAlBackend(codigoTemporal);
+      }
+    };
+
+    // CORRECCIÓN: Apunta al endpoint OAuth real de Twitch (id.twitch.tv) no a twitch.tv general
+    function abrirAutorizacionDev(event) {
+      event.preventDefault();
+      
+      var urlSegura = 'https://twitch.tv' +
+                      '?client_id=' + CLIENT_ID +
+                      '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
+                      '&response_type=code' +
+                      '&scope=' + encodeURIComponent(SCOPES) +
+                      '&force_verify=true';
+                      
+      window.location.href = urlSegura;
+    }
+
+    // NUEVA FUNCIÓN: Se comunica con el backend de forma segura
+    function enviarCodigoAlBackend(code) {
+      fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code })
+      })
+      .then(response => response.json())
+      .then(usuario => {
+        if (usuario && usuario.nombre) {
+          // Si el backend confirma el éxito, saludamos al usuario y hacemos la transición
+          document.getElementById('menuTitulo').innerText = "Hola, " + usuario.nombre;
+          ejecutarTransicionMenu();
+          
+          // Limpiamos el código de la barra de direcciones para estética
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          alert("Error en la sincronización con Twitch.");
+          document.getElementById('btnLogin').innerText = "Iniciar Sesión";
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        alert("Error de conexión con el servidor de sincronización.");
+        document.getElementById('btnLogin').innerText = "Iniciar Sesión";
+      });
+    }
+
+    function ejecutarTransicionMenu() {
+      document.getElementById('pantallaInicio').classList.add('oculto');
+      document.getElementById('pantallaMenu').style.visibility = 'visible';
+      
+      setTimeout(function() {
+        document.getElementById('pantallaMenu').classList.remove('oculto');
+        document.getElementById('botonCerrarSesion').classList.add('visible');
+      }, 400);
+    }
+
+    function abrirAdvertencia() { document.getElementById('miModal').classList.add('activo'); }
+    function cerrarAdvertencia() { document.getElementById('miModal').classList.remove('activo'); }
+
+    function confirmarCerrarSesion() {
+      cerrarAdvertencia();
+      // Redirige de vuelta a la página limpia sin sesión activa
+      window.location.href = REDIRECT_URI;
+    }
+
+    function cargarSeccion(nombreSeccion) { console.log("Sección presionada: " + nombreSeccion); }
+  </script>
+</body>
+</html>
