@@ -96,30 +96,25 @@
   </div>
 
   <script>
-    // ⚙️ CONFIGURACIÓN DE TU APP EN TWITCH DEVELOPER
+    // CONFIGURACIÓN GLOBAL DE TU APP
     const CLIENT_ID = 'jtwdrj3a05pcqgweyvqqajbb6clpvk'; 
-    // Reemplaza esta URL por la tuya de GitHub Pages (Ej: https://github.io)
     const REDIRECT_URI = 'https://github.io'; 
+
+    // OJO: Esta URL de Vercel la cambiaremos en el siguiente paso cuando nos den tu link real
+    const BACKEND_URL = 'https://vercel.app'; 
+
     const SCOPES = 'user:read:email';
 
-    // URL de tu futuro servidor backend seguro (Vercel / Render)
-    const BACKEND_URL = 'https://vercel.app';
-
     window.onload = function() {
-      // Analizamos si Twitch nos envió de regreso con un código en la URL (?code=xxxxx)
       const urlParams = new URLSearchParams(window.location.search);
       const codigoTemporal = urlParams.get('code');
 
       if (codigoTemporal) {
-        // Cambiamos el texto del botón para indicar progreso
         document.getElementById('btnLogin').innerText = "Procesando...";
-        
-        // Enviamos el código al backend para validar e interactuar con Google Sheets
         enviarCodigoAlBackend(codigoTemporal);
       }
     };
 
-    // CORRECCIÓN: Apunta al endpoint OAuth real de Twitch (id.twitch.tv) no a twitch.tv general
     function abrirAutorizacionDev(event) {
       event.preventDefault();
       
@@ -133,7 +128,6 @@
       window.location.href = urlSegura;
     }
 
-    // NUEVA FUNCIÓN: Se comunica con el backend de forma segura
     function enviarCodigoAlBackend(code) {
       fetch(BACKEND_URL, {
         method: 'POST',
@@ -143,11 +137,8 @@
       .then(response => response.json())
       .then(usuario => {
         if (usuario && usuario.nombre) {
-          // Si el backend confirma el éxito, saludamos al usuario y hacemos la transición
           document.getElementById('menuTitulo').innerText = "Hola, " + usuario.nombre;
           ejecutarTransicionMenu();
-          
-          // Limpiamos el código de la barra de direcciones para estética
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
           alert("Error en la sincronización con Twitch.");
@@ -176,7 +167,6 @@
 
     function confirmarCerrarSesion() {
       cerrarAdvertencia();
-      // Redirige de vuelta a la página limpia sin sesión activa
       window.location.href = REDIRECT_URI;
     }
 
