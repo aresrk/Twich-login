@@ -93,14 +93,13 @@
   </div>
 
   <script>
-    // CONFIGURACIÓN GLOBAL
-    const CLIENT_ID = 'jtwdrj3a05pcqgweyvqqajbb6clpvk'; 
+    // CONFIGURACIÓN GLOBAL CON TU NUEVO ID
+    const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS/'; 
     const SCOPES = 'user:read:email';
 
     // Se ejecuta automáticamente al cargar la página
     window.onload = function() {
-      // Capturamos el token que nos devuelve Twitch en la URL
       const hash = window.location.hash;
       if (hash) {
         const params = new URLSearchParams(hash.replace('#', '?'));
@@ -113,11 +112,10 @@
       }
     };
 
-    // Abre la pantalla de Twitch de tu captura
+    // Abre la pantalla de autorización de Twitch
     function abrirAutorizacionDev(event) {
       event.preventDefault();
       
-      // Cambiamos a response_type=token para que funcione directo en tu web estática
       var urlSegura = 'https://id.twitch.tv/oauth2/authorize' +
                       '?client_id=' + CLIENT_ID +
                       '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
@@ -128,7 +126,7 @@
       window.location.href = urlSegura;
     }
 
-    // Le pide a Twitch los datos del usuario usando el token recibido
+    // Pide tus datos de perfil a Twitch
     function obtenerDatosUsuario(token) {
       fetch('https://api.twitch.tv/helix/users', {
         method: 'GET',
@@ -142,11 +140,9 @@
         if (resultado.data && resultado.data.length > 0) {
           const usuario = resultado.data[0];
           
-          // Mostramos el nombre en el menú
           document.getElementById('menuTitulo').innerText = "Hola, " + usuario.display_name;
           ejecutarTransicionMenu();
           
-          // Limpiamos la barra de direcciones para que se vea bonita
           window.history.replaceState({}, document.title, window.location.pathname);
         } else {
           alert("No se pudieron obtener tus datos de Twitch.");
