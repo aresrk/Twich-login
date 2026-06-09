@@ -63,14 +63,12 @@
 
   <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
 
-  <!-- PANTALLA 1: INICIO -->
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
     <div class="subtitulo-autor">Creado por: <span>AresRK</span></div>
     <a id="btnLogin" class="btn-oro" href="#" onclick="abrirAutorizacionDev(event)">Iniciar Sesión</a>
   </div>
 
-  <!-- PANTALLA 2: MENÚ DE OPCIONES -->
   <div id="pantallaMenu" class="pantalla oculto">
     <div id="menuTitulo" class="menu-titulo">Panel General</div>
     <div class="menu-linea"></div>
@@ -84,7 +82,6 @@
     </div>
   </div>
 
-  <!-- VENTANA EMERGENTE DE CONFIRMACIÓN -->
   <div id="miModal" class="modal-fondo">
     <div class="modal-caja">
       <div class="modal-txt">¿Estás seguro?</div>
@@ -99,7 +96,6 @@
     // CONFIGURACIÓN GLOBAL
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS/'; 
-    // Scope exacto para la lista de participantes del chat en canales moderados
     const SCOPES = 'moderator:read:chatters';
 
     window.onload = function() {
@@ -117,12 +113,14 @@
 
     function abrirAutorizacionDev(event) {
       event.preventDefault();
+      // Se agregó '&lang=es' al final de la URL para forzar el idioma español
       var urlSegura = 'https://id.twitch.tv/oauth2/authorize' +
                       '?client_id=' + CLIENT_ID +
                       '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
                       '&response_type=token' + 
                       '&scope=' + encodeURIComponent(SCOPES) +
-                      '&force_verify=true';
+                      '&force_verify=true' +
+                      '&lang=es'; 
       window.location.href = urlSegura;
     }
 
