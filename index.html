@@ -30,6 +30,72 @@
       background: transparent; transition: all 0.4s ease; cursor: pointer;
     }
     .btn-oro:hover { background: #dfb76c; color: #0a0a0a; box-shadow: 0 0 30px rgba(223, 183, 108, 0.4); transform: translateY(-2px); }
+    
+    /* BLOQUE DE PERFIL SUPERIOR DERECHO (ESTILO PREMIUM) */
+    .perfil-superior {
+      position: fixed;
+      top: 25px;
+      right: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(18, 18, 18, 0.6);
+      padding: 8px 16px;
+      border-radius: 30px;
+      border: 1px solid #262626;
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.5s ease;
+    }
+    .perfil-superior.visible { opacity: 1; pointer-events: auto; }
+    .perfil-superior:hover {
+      border-color: #dfb76c;
+      box-shadow: 0 0 15px rgba(223, 183, 108, 0.15);
+      background: rgba(22, 22, 19, 0.8);
+    }
+    
+    .avatar-twitch {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid #dfb76c;
+      object-fit: cover;
+      background-color: #121212;
+    }
+    
+    .perfil-info {
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .txt-usuario {
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+    
+    /* BOTÓN CERRAR SESIÓN ESTILIZADO */
+    .btn-logout {
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+      color: #8c8c8c;
+      background: transparent;
+      border: none;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-align: left;
+      transition: color 0.3s ease;
+      margin-top: 2px;
+    }
+    .btn-logout:hover { color: #dfb76c; }
+
+    /* ESTILO DEL PANEL CENTRAL */
     .menu-titulo {
       font-size: 2.2rem; font-weight: 800; letter-spacing: 12px; margin-bottom: 15px; text-transform: uppercase;
       background: linear-gradient(180deg, #ffffff 30%, #a6a6a6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0px 2px 10px rgba(255, 255, 255, 0.3));
@@ -42,15 +108,11 @@
       cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
     .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; background: #161613; transform: scale(1.03); box-shadow: 0 5px 15px rgba(223, 183, 108, 0.08); }
-    .btn-logout {
-      position: fixed; top: 25px; left: 25px; font-size: 0.75rem; font-weight: 400; letter-spacing: 2px; color: #8c8c8c;
-      background: transparent; border: none; text-transform: uppercase; cursor: pointer; transition: opacity 0.5s ease, color 0.3s ease; z-index: 10; opacity: 0; pointer-events: none;
-    }
-    .btn-logout.visible { opacity: 1; pointer-events: auto; }
-    .btn-logout:hover { color: #dfb76c; }
+    
+    /* MODAL */
     .modal-fondo {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8);
-      display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+      display: flex; justify-content: center; align-items: center; z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
     }
     .modal-fondo.activo { opacity: 1; pointer-events: auto; }
     .modal-caja { background: #0a0a0a; border: 1px solid #dfb76c; padding: 35px 30px; border-radius: 4px; text-align: center; max-width: 450px; width: 90%; box-shadow: 0 10px 40px rgba(223, 183, 108, 0.15); }
@@ -61,7 +123,13 @@
 </head>
 <body>
 
-  <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
+  <div id="perfilSuperior" class="perfil-superior">
+    <img id="userAvatar" class="avatar-twitch" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><rect width='40' height='40' fill='%23121212'/></svg>" alt="Perfil">
+    <div class="perfil-info">
+      <span id="txtUsuario" class="txt-usuario">Cargando...</span>
+      <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
+    </div>
+  </div>
 
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
@@ -70,7 +138,7 @@
   </div>
 
   <div id="pantallaMenu" class="pantalla oculto">
-    <div id="menuTitulo" class="menu-titulo">Panel General</div>
+    <div class="menu-titulo">Panel General</div>
     <div class="menu-linea"></div>
     
     <div class="fila-opciones">
@@ -105,7 +173,10 @@
         const accessToken = params.get('access_token');
 
         if (accessToken) {
-          document.getElementById('btnLogin').innerText = "Cargando...";
+          // Entrar al panel de inmediato
+          ejecutarTransicionMenu();
+          
+          // Buscar el usuario y el avatar real en Twitch
           obtenerDatosUsuario(accessToken);
         }
       }
@@ -113,7 +184,6 @@
 
     function abrirAutorizacionDev(event) {
       event.preventDefault();
-      // Se agregó '&lang=es' al final de la URL para forzar el idioma español
       var urlSegura = 'https://id.twitch.tv/oauth2/authorize' +
                       '?client_id=' + CLIENT_ID +
                       '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
@@ -136,12 +206,19 @@
       .then(resultado => {
         if (resultado.data && resultado.data.length > 0) {
           const usuario = resultado.data[0];
-          document.getElementById('menuTitulo').innerText = "Hola, " + usuario.display_name;
-          ejecutarTransicionMenu();
+          
+          // Inyectamos los datos reales en el botón superior derecho
+          document.getElementById('txtUsuario').innerText = usuario.display_name;
+          document.getElementById('userAvatar').src = usuario.profile_image_url;
+          
+          // Limpiar la URL limpia por estética
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       })
-      .catch(error => { console.error('Error:', error); });
+      .catch(error => { 
+        console.error('Error al obtener datos reales de Twitch:', error);
+        document.getElementById('txtUsuario').innerText = "Usuario";
+      });
     }
 
     function ejecutarTransicionMenu() {
@@ -149,14 +226,15 @@
       document.getElementById('pantallaMenu').style.visibility = 'visible';
       setTimeout(function() {
         document.getElementById('pantallaMenu').classList.remove('oculto');
-        document.getElementById('botonCerrarSesion').classList.add('visible');
+        // Muestra la tarjeta de perfil arriba a la derecha de forma fluida
+        document.getElementById('perfilSuperior').classList.add('visible');
       }, 400);
     }
 
     function abrirAdvertencia() { document.getElementById('miModal').classList.add('activo'); }
     function cerrarAdvertencia() { document.getElementById('miModal').classList.remove('activo'); }
     function confirmarCerrarSesion() { window.location.href = REDIRECT_URI; }
-    function cargarSeccion(nombre) { console.log("Sección: " + nombre); }
+    function cargarSeccion(nombre) { alert("Has entrado a la sección: " + nombre); }
   </script>
 </body>
 </html>
