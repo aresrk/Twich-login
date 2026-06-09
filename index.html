@@ -99,8 +99,8 @@
     // CONFIGURACIÓN GLOBAL
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS/'; 
-    // Permiso actualizado para ver chat como moderador
-    const SCOPES = 'moderator:read:chat_settings';
+    // Scope exacto para la lista de participantes del chat en canales moderados
+    const SCOPES = 'moderator:read:chatters';
 
     window.onload = function() {
       const hash = window.location.hash;
