@@ -213,7 +213,8 @@
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS-/'; 
     const SCOPES = 'moderator:read:chatters';
     
-    const URL_GOOGLE_SCRIPT = 'AQUÍ_VA_TU_URL_DE_GOOGLE_APPS_SCRIPT'; 
+    // 🧠 ¡CONEXIÓN REAL AL CEREBRO DE GOOGLE SCRIPT YA CONFIGURADA! ⚡
+    const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec'; 
 
     let usuarioActual = { id: "", name: "" };
     const PUNTOS_MAXIMOS = 100;
@@ -266,7 +267,7 @@
     }
 
     function sincronizarPuntosConBaseDatos(puntosAMandar) {
-      if (!usuarioActual.id || URL_GOOGLE_SCRIPT === 'AQUÍ_VA_TU_URL_DE_GOOGLE_APPS_SCRIPT') return;
+      if (!usuarioActual.id || URL_GOOGLE_SCRIPT.includes('AQUÍ_VA_TU_URL')) return;
       fetch(URL_GOOGLE_SCRIPT, {
         method: "POST",
         mode: "no-cors",
@@ -292,7 +293,7 @@
       }, 3600000); 
     }
 
-    // ⚡ CONEXIÓN DINÁMICA AL CHAT DE TWITCH DEL USUARIO LOGUEADO ⚡
+    // CONEXIÓN DINÁMICA AL CHAT DE TWITCH
     function conectarAlChatTwitch() {
       if (!usuarioActual.name) return;
 
@@ -301,7 +302,6 @@
       websocketChat.onopen = function() {
         websocketChat.send('PASS oauth:justinfan12345'); 
         websocketChat.send('NICK justinfan12345');
-        // Se conecta automáticamente al canal del usuario logueado
         websocketChat.send('JOIN #' + usuarioActual.name.toLowerCase());
         console.log("Conectado dinámicamente al chat del canal: " + usuarioActual.name);
       };
@@ -313,7 +313,6 @@
           const partes = mensajeRaw.split('!');
           const usuarioQueComento = partes[0].substring(1).toLowerCase();
 
-          // Premia al usuario si comenta en su propio directo/comunidad activa
           if (usuarioQueComento === usuarioActual.name.toLowerCase()) {
             if (puedoGanarPuntosChat) {
               console.log("¡Comentario detectado! Otorgando 10 puntos.");
@@ -380,8 +379,9 @@
           
           sincronizarPuntosConBaseDatos(0);
           iniciarTemporizadorVisualizacion();
-          conectarAlChatTwitch(); // Inicia la escucha dinámica
+          conectarAlChatTwitch(); 
 
+          // Barra limpia a 0
           actualizarInterfazPuntos(0);
 
           window.history.replaceState({}, document.title, window.location.pathname);
