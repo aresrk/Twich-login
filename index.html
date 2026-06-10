@@ -78,49 +78,53 @@
       text-shadow: 0 0 10px rgba(223, 183, 108, 0.5);
     }
 
-    /* BARRA DE PROGRESO CON RÁFAGA REPOTENCIADA */
+    /* BARRA DE PROGRESO */
     .barra-contenedor {
       width: 80%;
       max-width: 350px;
-      height: 16px; /* Un pelín más alta para que luzca más */
-      background: rgba(0, 0, 0, 0.6);
-      border: 1px solid rgba(223, 183, 108, 0.3);
+      height: 18px; /* Un poco más gruesa para que el destello impacte más */
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(223, 183, 108, 0.35);
       border-radius: 10px;
       margin: 12px auto 5px auto;
       overflow: hidden;
       padding: 2px;
-      box-shadow: inset 0 2px 5px rgba(0,0,0,0.7);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
     }
 
     .barra-progreso {
       height: 100%;
       width: 0%; 
-      background: linear-gradient(90deg, #cc9a06, #ffd700, #fff2a3);
+      background: linear-gradient(90deg, #c49902, #ffd700, #fff4b8);
       border-radius: 8px;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
       transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
       position: relative;
       overflow: hidden;
     }
 
-    /* RÁFAGA DE LUZ BLANCA MUCHO MÁS VÍVIDA Y ULTRA VISIBLE */
+    /* ⚡ RÁFAGA PLATEADA ULTRA VÍVIDA (MÁXIMO PODER DE LUZ) ⚡ */
     .barra-progreso::after {
       content: '';
       position: absolute;
-      top: 0; left: -150px; bottom: 0; width: 80px; /* Ráfaga más ancha */
+      top: 0; left: -150px; bottom: 0; 
+      width: 110px; /* Súper ancha */
       background: linear-gradient(
         90deg, 
         rgba(255, 255, 255, 0) 0%, 
-        rgba(255, 255, 255, 0.6) 50%, /* Mucha más opacidad (0.6) para que brille fuerte */
+        rgba(230, 240, 255, 0.4) 30%,
+        rgba(255, 255, 255, 1) 50%,   /* Blanco sólido metálico en el centro */
+        rgba(230, 240, 255, 0.4) 70%,
         rgba(255, 255, 255, 0) 100%
       );
-      transform: skewX(-30deg); /* Inclinación de la ráfaga */
-      animation: brilloFeroz 2s ease-in-out infinite; /* Animación infinita fluida */
+      transform: skewX(-35deg);
+      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)); /* Resplandor de luz propio */
+      animation: brilloFeroz 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; /* Más rápido y dinámico */
     }
 
     @keyframes brilloFeroz {
       0% { left: -150px; }
-      100% { left: 100%; }
+      100% { left: 120%; }
     }
 
     .menu-titulo {
@@ -166,14 +170,12 @@
   <canvas id="canvasRayos"></canvas>
   <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
 
-  <!-- PANTALLA 1 -->
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
     <div class="subtitulo-autor">Creado por: <span>AresRK</span></div>
     <a id="btnLogin" class="btn-oro" href="#" onclick="abrirAutorizacionDev(event)">Iniciar Sesión</a>
   </div>
 
-  <!-- PANTALLA 2 -->
   <div id="pantallaMenu" class="pantalla oculto">
     <div class="perfil-contenedor">
       <img id="userAvatar" class="avatar-twitch" src="" alt="Perfil">
@@ -190,7 +192,7 @@
     <div class="fila-opciones">
       <button class="btn-opcion" onclick="cargarSeccion('ranking')">Ranking</button>
       <button class="btn-opcion" onclick="cargarSeccion('lives')">Lives</button>
-      <button class="btn-opcion" onclick="cargarSeccion('recompensas')">Recompensas</button>
+      <button class="btn-opcion" onclick="cannotCargarSeccion('recompensas')">Recompensas</button>
       <button class="btn-opcion" onclick="cargarSeccion('comunidad')">Comunidad</button>
       <button class="btn-opcion" onclick="cargarSeccion('soporte')">Soporte</button>
     </div>
@@ -216,7 +218,7 @@
     let usuarioActual = { id: "", name: "" };
     const PUNTOS_MAXIMOS = 100;
 
-    // MOTOR DE RAYOS (CANVAS)
+    // MOTOR DE RAYOS
     const canvas = document.getElementById('canvasRayos');
     const ctx = canvas.getContext('2d');
     function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -336,7 +338,7 @@
           sincronizarPuntosConBaseDatos(0);
           iniciarTemporizadorVisualizacion();
 
-          // Simulación de prueba: cambié a 45 puntos para que la barra se vea casi a la mitad y se note más la ráfaga
+          // Mantengo la prueba en 45 puntos para que veas pasar el rayo plateado de luz líquida a la mitad
           actualizarInterfazPuntos(45);
 
           window.history.replaceState({}, document.title, window.location.pathname);
