@@ -112,7 +112,7 @@
 <body>
 
   <canvas id="canvasRayos"></canvas>
-  <button id="botonCerrarSesion" class="btn-logout" onclick="mostrarSeccion('inicio')">Cerrar Sesión</button>
+  <button id="botonCerrarSesion" class="btn-logout" onclick="solicitarCerrarSesion()">Cerrar Sesión</button>
 
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
@@ -166,7 +166,6 @@
     function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
 
-    // Función recursiva para dibujar ramas de rayos verdaderos (no palos rectos)
     function dibujarRamaRayo(x1, y1, x2, y2, desviacion) {
       let enMedioX = (x1 + x2) / 2;
       let enMedioY = (y1 + y2) / 2;
@@ -176,7 +175,6 @@
       if (desviacion > 4) {
         dibujarRamaRayo(x1, y1, enMedioX, enMedioY, desviacion / 2);
         dibujarRamaRayo(enMedioX, enMedioY, x2, y2, desviacion / 2);
-        // Generar pequeñas ramificaciones secundarias aleatorias
         if (Math.random() < 0.25) {
           dibujarRamaRayo(enMedioX, enMedioY, enMedioX + (Math.random() - 0.5) * 40, enMedioY + Math.random() * 40, desviacion / 2);
         }
@@ -191,29 +189,24 @@
       
       ctx.beginPath();
       ctx.moveTo(inicioX, 0);
-      ctx.lineTo(inicioX, 5); // Pequeño inicio firme
+      ctx.lineTo(inicioX, 5);
       
       dibujarRamaRayo(inicioX, 5, finX, canvas.height, 120);
       
-      // Estilo de energía dorada brillante e intensa
       ctx.strokeStyle = 'rgba(243, 225, 185, 0.9)';
       ctx.lineWidth = 1.5 + Math.random() * 1.5;
       ctx.shadowBlur = 20;
       ctx.shadowColor = '#dfb76c';
       ctx.stroke();
-      ctx.shadowBlur = 0; // Reset
+      ctx.shadowBlur = 0;
     }
 
-    // Bucle de renderizado continuo de alta velocidad
     function bucleEfectos() {
-      // Crea un rastro de desvanecimiento para que los rayos no desaparezcan bruscamente
       ctx.fillStyle = 'rgba(3, 3, 3, 0.25)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Frecuencia alta y constante (18% de probabilidad por fotograma de generar impactos)
       if (Math.random() < 0.18) {
         lanzarRayoEstructurado();
-        // Destello ambiental rápido en el fondo
         if(Math.random() < 0.3) {
           ctx.fillStyle = 'rgba(223, 183, 108, 0.04)';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -231,6 +224,14 @@
       if(sec === 'inicio') { document.getElementById('pantallaInicio').classList.remove('oculto'); document.getElementById('botonCerrarSesion').classList.remove('visible'); }
       if(sec === 'menu') document.getElementById('pantallaMenu').classList.remove('oculto');
       if(sec === 'lives') document.getElementById('pantallaLives').classList.remove('oculto');
+    }
+
+    // ADVERTENCIA DE SEGURIDAD AL CERRAR SESIÓN RESTAURADA
+    function solicitarCerrarSesion() {
+      const confirmacion = confirm("¿Estás seguro de que deseas cerrar sesión?");
+      if (confirmacion) {
+        mostrarSeccion('inicio');
+      }
     }
 
     function abrirAutorizacion(e) { e.preventDefault(); window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&force_verify=true`; }
