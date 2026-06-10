@@ -9,403 +9,191 @@
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    body {
-      font-family: 'Montserrat', sans-serif;
-      color: #ffffff; 
-      min-height: 100vh;
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      overflow-x: hidden;
-      background-color: #030303;
-      position: relative;
-    }
-
-    #canvasRayos {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none;
-    }
-
-    .pantalla {
-      text-align: center; position: absolute; width: 90%; max-width: 550px; padding: 35px 25px;
-      background: rgba(10, 10, 10, 0.82); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 12px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.05);
-      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2;
-    }
+    body { font-family: 'Montserrat', sans-serif; color: #ffffff; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow-x: hidden; background-color: #030303; position: relative; }
+    #canvasRayos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+    .pantalla { text-align: center; position: absolute; width: 90%; max-width: 550px; padding: 35px 25px; background: rgba(10, 10, 10, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 12px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65); transition: all 0.8s ease; z-index: 2; }
     .oculto { opacity: 0; transform: translateY(-30px) scale(0.95); pointer-events: none; visibility: hidden; }
-    
-    h1 {
-      font-size: 2.4rem; font-weight: 600; letter-spacing: 8px; margin-bottom: 8px;
-      text-transform: uppercase; color: #dfb76c; 
-      background: linear-gradient(135deg, #dfb76c 0%, #f3e1b9 50%, #c39645 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0px 4px 15px rgba(223, 183, 108, 0.15));
-    }
-    @media (max-width: 400px) { h1 { font-size: 1.8rem; letter-spacing: 4px; } }
-
-    .subtitulo-autor { font-size: 0.8rem; font-weight: 200; letter-spacing: 4px; color: #aaaaaa; margin-bottom: 40px; text-transform: uppercase; }
-    .subtitulo-autor span { font-weight: 400; color: #dfb76c; }
-    
-    .btn-oro {
-      display: inline-block; padding: 14px 40px; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px;
-      color: #0a0a0a; text-decoration: none; text-transform: uppercase; border-radius: 4px;
-      background: linear-gradient(135deg, #dfb76c 0%, #f9e7c4 100%);
-      transition: all 0.4s ease; cursor: pointer; box-shadow: 0 4px 15px rgba(223, 183, 108, 0.3); border: none;
-    }
-    .btn-oro:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(223, 183, 108, 0.6); background: linear-gradient(135deg, #f9e7c4 0%, #dfb76c 100%); }
-    
+    h1 { font-size: 2.4rem; font-weight: 600; letter-spacing: 8px; margin-bottom: 8px; text-transform: uppercase; color: #dfb76c; background: linear-gradient(135deg, #dfb76c 0%, #f3e1b9 50%, #c39645 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .btn-oro { display: inline-block; padding: 14px 40px; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px; color: #0a0a0a; text-decoration: none; text-transform: uppercase; border-radius: 4px; background: linear-gradient(135deg, #dfb76c 0%, #f9e7c4 100%); cursor: pointer; border: none; }
     .perfil-contenedor { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; width: 100%; }
-    .avatar-twitch {
-      width: 85px; height: 85px; border-radius: 50%; border: 2px solid #dfb76c; margin-bottom: 15px;
-      box-shadow: 0 0 25px rgba(223, 183, 108, 0.4); object-fit: cover; background-color: #121212;
-      opacity: 0; transition: opacity 0.5s ease;
-    }
-    .avatar-twitch.cargado { opacity: 1; }
-
-    /* CONTADOR DE PUNTOS */
-    .marcador-puntos {
-      font-size: 0.85rem;
-      letter-spacing: 2px;
-      color: #f3e1b9;
-      margin-top: 8px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .marcador-puntos span {
-      color: #ffffff;
-      font-weight: 800;
-      text-shadow: 0 0 10px rgba(223, 183, 108, 0.5);
-    }
-
-    /* BARRA DE PROGRESO */
-    .barra-contenedor {
-      width: 80%;
-      max-width: 350px;
-      height: 18px;
-      background: rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(223, 183, 108, 0.35);
-      border-radius: 10px;
-      margin: 12px auto 5px auto;
-      overflow: hidden;
-      padding: 2px;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
-    }
-
-    .barra-progreso {
-      height: 100%;
-      width: 0%; 
-      background: linear-gradient(90deg, #c49902, #ffd700, #fff4b8);
-      border-radius: 8px;
-      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    /* RÁFAGA PLATEADA ULTRA VÍVIDA */
-    .barra-progreso::after {
-      content: '';
-      position: absolute;
-      top: 0; left: -150px; bottom: 0; 
-      width: 110px;
-      background: linear-gradient(
-        90deg, 
-        rgba(255, 255, 255, 0) 0%, 
-        rgba(230, 240, 255, 0.4) 30%,
-        rgba(255, 255, 255, 1) 50%,   
-        rgba(230, 240, 255, 0.4) 70%,
-        rgba(255, 255, 255, 0) 100%
-      );
-      transform: skewX(-35deg);
-      filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9));
-      animation: brilloFeroz 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    }
-
-    @keyframes brilloFeroz {
-      0% { left: -150px; }
-      100% { left: 120%; }
-    }
-
-    .menu-titulo {
-      font-size: 1.6rem; font-weight: 800; letter-spacing: 6px; text-transform: uppercase;
-      background: linear-gradient(180deg, #ffffff 40%, #b3b3b3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
-      filter: drop-shadow(0px 2px 5px rgba(255, 255, 255, 0.1));
-    }
-    @media (max-width: 400px) { .menu-titulo { font-size: 1.3rem; letter-spacing: 4px; } }
-
-    .menu-linea { width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #dfb76c, transparent); margin: 15px auto 30px auto; }
-    
+    .avatar-twitch { width: 85px; height: 85px; border-radius: 50%; border: 2px solid #dfb76c; margin-bottom: 15px; }
+    .marcador-puntos { font-size: 0.85rem; letter-spacing: 2px; color: #f3e1b9; margin-top: 8px; font-weight: 600; text-transform: uppercase; }
+    .barra-contenedor { width: 80%; max-width: 350px; height: 18px; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(223, 183, 108, 0.35); border-radius: 10px; margin: 12px auto 5px auto; overflow: hidden; padding: 2px; }
+    .barra-progreso { height: 100%; width: 0%; background: linear-gradient(90deg, #c49902, #ffd700, #fff4b8); border-radius: 8px; position: relative; overflow: hidden; transition: width 0.6s ease; }
+    .barra-progreso::after { content: ''; position: absolute; top: 0; left: -150px; bottom: 0; width: 110px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%); transform: skewX(-35deg); animation: brilloFeroz 1.8s infinite; }
+    @keyframes brilloFeroz { 0% { left: -150px; } 100% { left: 120%; } }
     .fila-opciones { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-    @media (min-width: 480px) { .fila-opciones { flex-direction: row; flex-wrap: wrap; justify-content: center; } }
-
-    .btn-opcion {
-      width: 100%; padding: 15px 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 2px;
-      color: #dddddd; background: rgba(20, 19, 17, 0.7); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 6px; 
-      text-transform: uppercase; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    }
-    @media (min-width: 480px) { .btn-opcion { flex: 1 1 200px; width: auto; } }
-    .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; background: rgba(223, 183, 108, 0.08); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(223, 183, 108, 0.15); }
-    
-    .btn-logout {
-      position: absolute; top: 20px; left: 20px; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; color: #8c8c8c;
-      background: transparent; border: none; text-transform: uppercase; cursor: pointer; transition: opacity 0.5s ease, color 0.3s ease; z-index: 10; opacity: 0; pointer-events: none;
-    }
-    .btn-logout.visible { opacity: 1; pointer-events: auto; }
-    .btn-logout:hover { color: #dfb76c; text-shadow: 0 0 10px rgba(223, 183, 108, 0.5); }
-    
-    .modal-fondo {
-      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85);
-      display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease; backdrop-filter: blur(5px);
-    }
-    .modal-fondo.activo { opacity: 1; pointer-events: auto; }
-    .modal-caja { background: #0a0a0a; border: 1px solid #dfb76c; padding: 35px 30px; border-radius: 8px; text-align: center; max-width: 400px; width: 85%; box-shadow: 0 15px 40px rgba(223, 183, 108, 0.2); }
-    .modal-txt { font-size: 1rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 25px; color: #ffffff; }
-    .modal-botones { display: flex; justify-content: center; gap: 15px; }
-    .modal-botones .btn-opcion { flex: 1 1 120px; padding: 12px 10px; }
+    .btn-opcion { width: 100%; padding: 15px 10px; font-size: 0.75rem; font-weight: 600; color: #dddddd; background: rgba(20, 19, 17, 0.7); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 6px; text-transform: uppercase; cursor: pointer; }
+    .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; }
+    .lista-lives { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; text-align: left; }
+    .tarjeta-live { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px; border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
   </style>
 </head>
 <body>
 
   <canvas id="canvasRayos"></canvas>
-  <button id="botonCerrarSesion" class="btn-logout" onclick="abrirAdvertencia()">Cerrar Sesión</button>
 
+  <!-- PANTALLA INICIO -->
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
-    <div class="subtitulo-autor">Creado por: <span>AresRK</span></div>
-    <a id="btnLogin" class="btn-oro" href="#" onclick="abrirAutorizacionDev(event)">Iniciar Sesión</a>
+    <br><br>
+    <a class="btn-oro" href="#" onclick="abrirAutorizacion(event)">Iniciar Sesión con Twitch</a>
   </div>
 
+  <!-- PANTALLA MENÚ PRINCIPAL -->
   <div id="pantallaMenu" class="pantalla oculto">
     <div class="perfil-contenedor">
-      <img id="userAvatar" class="avatar-twitch" src="" alt="Perfil">
-      <div id="menuTitulo" class="menu-titulo">Cargando...</div>
-      
-      <div id="contenedorPuntos" class="marcador-puntos">Puntos: <span id="contadorPuntos">0</span> / 100</div>
-      
-      <div class="barra-contenedor">
-        <div id="barraProgreso" class="barra-progreso"></div>
-      </div>
+      <img id="userAvatar" class="avatar-twitch" src="">
+      <div id="menuTitulo" style="font-size:1.5rem; color:#dfb76c;">Cargando...</div>
+      <div class="marcador-puntos">Puntos: <span id="contadorPuntos">0</span> / 100</div>
+      <div class="barra-contenedor"><div id="barraProgreso" class="barra-progreso"></div></div>
     </div>
-    <div class="menu-linea"></div>
-    
+    <br>
     <div class="fila-opciones">
-      <button class="btn-opcion" onclick="cargarSeccion('ranking')">Ranking</button>
-      <button class="btn-opcion" onclick="cargarSeccion('lives')">Lives</button>
-      <button class="btn-opcion" onclick="cargarSeccion('recompensas')">Recompensas</button>
-      <button class="btn-opcion" onclick="cargarSeccion('comunidad')">Comunidad</button>
-      <button class="btn-opcion" onclick="cargarSeccion('soporte')">Soporte</button>
+      <button class="btn-opcion" onclick="mostrarSeccion('lives')">🔴 Ver Sección Lives</button>
+      <button class="btn-opcion" onclick="alert('Próximamente')">Ranking / Recompensas</button>
     </div>
   </div>
 
-  <div id="miModal" class="modal-fondo">
-    <div class="modal-caja">
-      <div class="modal-txt">¿Estás seguro?</div>
-      <div class="modal-botones">
-        <button class="btn-opcion" onclick="confirmarCerrarSesion()">Aceptar</button>
-        <button class="btn-opcion" onclick="cerrarAdvertencia()">Regresar</button>
+  <!-- PANTALLA LIVES (SISTEMA DE ASISTENCIA MUTUA) -->
+  <div id="pantallaLives" class="pantalla oculto">
+    <h2 style="color:#dfb76c; letter-spacing:3px;">CANALES EN VIVO</h2>
+    <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Selecciona a quién vas a apoyar para activar tu rastreador de puntos:</p>
+    
+    <div class="lista-lives">
+      <!-- Aquí puedes añadir dinámicamente los streamers de tu grupo -->
+      <div class="tarjeta-live">
+        <div>
+          <strong id="streamerNombre">Canal Principal</strong><br>
+          <span style="font-size:0.75rem; color:#00ffcc;">● Listo para pasar asistencia</span>
+        </div>
+        <button class="btn-oro" style="padding:8px 15px; font-size:0.7rem;" onclick="activarRastreoEIrATwitch('AresRK')">APOYAR</button>
       </div>
     </div>
+    <br>
+    <button class="btn-opcion" onclick="mostrarSeccion('menu')">Volver al Menú</button>
   </div>
 
   <script>
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS-/'; 
-    const SCOPES = 'moderator:read:chatters';
-    
-    // 🧠 ¡CONEXIÓN REAL AL CEREBRO DE GOOGLE SCRIPT YA CONFIGURADA! ⚡
-    const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec'; 
+    const SCOPES = 'moderator:read:chatters user:read:chat';
+    const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec';
 
-    let usuarioActual = { id: "", name: "" };
-    const PUNTOS_MAXIMOS = 100;
+    let tokenActual = "";
+    let miUsuarioId = "";
+    let miNombreTwitch = "";
+    let usuariosQueChatearonEsteMinuto = [];
     let websocketChat = null;
-    let puedoGanarPuntosChat = true; 
 
-    // MOTOR DE RAYOS
-    const canvas = document.getElementById('canvasRayos');
-    const ctx = canvas.getContext('2d');
+    // MOTOR DE RAYOS (ESTILO VISUAL)
+    const canvas = document.getElementById('canvasRayos'); const ctx = canvas.getContext('2d');
     function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
+    function crearRayo(x1, y1, x2, y2) {
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+      ctx.strokeStyle = 'rgba(255, 220, 50, 0.6)'; ctx.lineWidth = 2; ctx.stroke();
+    }
+    setInterval(() => { ctx.fillStyle = 'rgba(3, 3, 3, 0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); if(Math.random()<0.04) crearRayo(Math.random()*canvas.width, 0, Math.random()*canvas.width, canvas.height); }, 50);
 
-    function crearRayo(x1, y1, x2, y2, ramas) {
-      let puntos = []; let x = x1; let y = y1; puntos.push({x: x, y: y});
-      let pasos = 25; let dx = (x2 - x1) / pasos; let dy = (y2 - y1) / pasos;
-      for (let i = 1; i < pasos; i++) {
-        x += dx + (Math.random() - 0.5) * 45; y += dy; puntos.push({x: x, y: y});
-        if (ramas && Math.random() < 0.18) {
-          crearRayo(x, y, x + (Math.random() - 0.5) * 120, y + Math.random() * 80, false);
-        }
-      }
-      puntos.push({x: x2, y: y2});
-      ctx.beginPath(); ctx.moveTo(puntos[0].x, puntos[0].y);
-      for (let i = 1; i < puntos.length; i++) ctx.lineTo(puntos[i].x, puntos[i].y);
-      ctx.strokeStyle = 'rgba(255, 220, 50, 0.8)'; ctx.lineWidth = ramas ? 3 : 1.5;
-      ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 25; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(puntos[0].x, puntos[0].y);
-      for (let i = 1; i < puntos.length; i++) ctx.lineTo(puntos[i].x, puntos[i].y);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = ramas ? 1.2 : 0.6; ctx.shadowBlur = 0; ctx.stroke();
+    // CONTROL DE PANTALLAS
+    function mostrarSeccion(seccion) {
+      document.getElementById('pantallaInicio').classList.add('oculto');
+      document.getElementById('pantallaMenu').classList.add('oculto');
+      document.getElementById('pantallaLives').classList.add('oculto');
+      if(seccion === 'menu') document.getElementById('pantallaMenu').classList.remove('oculto');
+      if(seccion === 'lives') document.getElementById('pantallaLives').classList.remove('oculto');
     }
 
-    function bucleTormenta() {
-      ctx.fillStyle = 'rgba(3, 3, 3, 0.28)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (Math.random() < 0.05) { 
-        let xIn = Math.random() * canvas.width;
-        crearRayo(xIn, 0, xIn + (Math.random() - 0.5) * (canvas.width * 0.4), canvas.height, true);
-      }
-      requestAnimationFrame(bucleTormenta);
-    }
-    bucleTormenta();
-
-    // INTERFAZ DE PUNTOS
-    function actualizarInterfazPuntos(nuevosPuntos) {
-      let marcador = document.getElementById('contadorPuntos');
-      let barra = document.getElementById('barraProgreso');
-      marcador.innerText = nuevosPuntos;
-      let porcentaje = (nuevosPuntos / PUNTOS_MAXIMOS) * 100;
-      if (porcentaje > 100) porcentaje = 100;
-      barra.style.width = porcentaje + "%";
+    function abrirAutorizacion(e) {
+      e.preventDefault();
+      window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&force_verify=true`;
     }
 
-    function sincronizarPuntosConBaseDatos(puntosAMandar) {
-      if (!usuarioActual.id || URL_GOOGLE_SCRIPT.includes('AQUÍ_VA_TU_URL')) return;
-      fetch(URL_GOOGLE_SCRIPT, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: usuarioActual.id,
-          userName: usuarioActual.name,
-          puntos: puntosAMandar
-        })
-      })
-      .then(() => {
-        if (puntosAMandar > 0) {
-          let puntosActuales = parseInt(document.getElementById('contadorPuntos').innerText);
-          actualizarInterfazPuntos(puntosActuales + puntosAMandar);
-        }
-      })
-      .catch(err => console.error("Error base de datos:", err));
-    }
-
-    function iniciarTemporizadorVisualizacion() {
-      setInterval(function() {
-        sincronizarPuntosConBaseDatos(10);
-      }, 3600000); 
-    }
-
-    // CONEXIÓN DINÁMICA AL CHAT DE TWITCH
-    function conectarAlChatTwitch() {
-      if (!usuarioActual.name) return;
-
-      websocketChat = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-
-      websocketChat.onopen = function() {
-        websocketChat.send('PASS oauth:justinfan12345'); 
-        websocketChat.send('NICK justinfan12345');
-        websocketChat.send('JOIN #' + usuarioActual.name.toLowerCase());
-        console.log("Conectado dinámicamente al chat del canal: " + usuarioActual.name);
-      };
-
-      websocketChat.onmessage = function(evento) {
-        const mensajeRaw = evento.data;
-        
-        if (mensajeRaw.includes('PRIVMSG')) {
-          const partes = mensajeRaw.split('!');
-          const usuarioQueComento = partes[0].substring(1).toLowerCase();
-
-          if (usuarioQueComento === usuarioActual.name.toLowerCase()) {
-            if (puedoGanarPuntosChat) {
-              console.log("¡Comentario detectado! Otorgando 10 puntos.");
-              sincronizarPuntosConBaseDatos(10);
-
-              puedoGanarPuntosChat = false;
-              setTimeout(function() {
-                puedoGanarPuntosChat = true;
-              }, 300000); 
-            }
-          }
-        }
-      };
-
-      websocketChat.onclose = function() {
-        setTimeout(conectarAlChatTwitch, 5000);
-      };
-    }
-
-    // LOGICA TWITCH
     window.onload = function() {
-      let accessToken = null;
-      if (window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-        accessToken = hashParams.get('access_token');
-      } 
-      if (!accessToken) {
-        const urlParams = new URLSearchParams(window.location.search);
-        accessToken = urlParams.get('access_token');
-      }
-      if (accessToken) {
-        ejecutarTransicionMenu();
-        obtenerDatosUsuario(accessToken);
+      const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+      tokenActual = hashParams.get('access_token');
+      if (tokenActual) {
+        mostrarSeccion('menu');
+        obtenerDatosUsuario();
       }
     };
 
-    function abrirAutorizacionDev(event) {
-      event.preventDefault();
-      window.location.href = 'https://id.twitch.tv/oauth2/authorize' +
-                      '?client_id=' + CLIENT_ID +
-                      '&redirect_uri=' + encodeURIComponent(REDIRECT_URI) +
-                      '&response_type=token' + 
-                      '&scope=' + encodeURIComponent(SCOPES) +
-                      '&force_verify=true' +
-                      '&lang=es';
-    }
-
-    function obtenerDatosUsuario(token) {
-      fetch('https://api.twitch.tv/helix/users', {
-        method: 'GET',
-        headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + token }
-      })
-      .then(response => response.json())
-      .then(resultado => {
-        if (resultado.data && resultado.data.length > 0) {
-          const usuario = resultado.data[0];
-          usuarioActual.id = usuario.id;
-          usuarioActual.name = usuario.display_name;
-
-          document.getElementById('menuTitulo').innerText = "Hola " + usuario.display_name;
-          const avatarImg = document.getElementById('userAvatar');
-          avatarImg.src = usuario.profile_image_url;
-          avatarImg.classList.add('cargado');
-          
-          sincronizarPuntosConBaseDatos(0);
-          iniciarTemporizadorVisualizacion();
-          conectarAlChatTwitch(); 
-
-          // Barra limpia a 0
-          actualizarInterfazPuntos(0);
-
-          window.history.replaceState({}, document.title, window.location.pathname);
-        }
-      })
-      .catch(error => { 
-        console.error('Error en Twitch:', error);
-        document.getElementById('menuTitulo').innerText = "Panel General";
+    function obtenerDatosUsuario() {
+      fetch('https://api.twitch.tv/helix/users', { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + tokenActual } })
+      .then(r => r.json())
+      .then(d => {
+        const u = d.data[0];
+        miUsuarioId = u.id;
+        miNombreTwitch = u.login;
+        document.getElementById('menuTitulo').innerText = "Hola " + u.display_name;
+        document.getElementById('userAvatar').src = u.profile_image_url;
+        
+        // Conexión pasiva al chat propio para escuchar si alguien nos ayuda en nuestro canal
+        conectarEscuchaChat(u.login);
+        
+        // Bucle de asistencia: Cada 1 minuto (60000 ms) pasa lista de quién está en nuestro chat
+        setInterval(ejecutarPasoDeAsistenciaMinutario, 60000);
       });
     }
 
-    function ejecutarTransicionMenu() {
-      document.getElementById('pantallaInicio').classList.add('oculto');
-      document.getElementById('pantallaMenu').style.visibility = 'visible';
-      setTimeout(function() {
-        document.getElementById('pantallaMenu').classList.remove('oculto');
-        document.getElementById('botonCerrarSesion').classList.add('visible');
-      }, 400);
+    // CONECTAR AL CHAT VÍA WEBSOCKET PARA CAPTURAR COMENTARIOS EN TIEMPO REAL
+    function conectarEscuchaChat(canal) {
+      if(websocketChat) websocketChat.close();
+      websocketChat = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+      websocketChat.onopen = () => {
+        websocketChat.send('PASS oauth:justinfan12345');
+        websocketChat.send('NICK justinfan12345');
+        websocketChat.send('JOIN #' + canal.toLowerCase());
+      };
+      websocketChat.onmessage = (e) => {
+        if(e.data.includes('PRIVMSG')) {
+          let usuario = e.data.split('!')[0].substring(1).toLowerCase();
+          if(usuariosQueChatearonEsteMinuto.indexOf(usuario) === -1) {
+            usuariosQueChatearonEsteMinuto.push(usuario); // Registramos que este usuario comentó
+          }
+        }
+      };
     }
 
-    function abrirAdvertencia() { document.getElementById('miModal').classList.add('activo'); }
-    function cerrarAdvertencia() { document.getElementById('miModal').classList.remove('activo'); }
-    function confirmarCerrarSesion() { window.location.href = REDIRECT_URI; }
-    function cargarSeccion(nombre) { alert("Has entrado a la sección: " + nombre); }
+    // ACCIÓN DEL BOTÓN "APOYAR": Redirige al streamer y sintoniza el chat de ese streamer
+    function activarRastreoEIrATwitch(nombreStreamer) {
+      alert(`Activando rastreo para el canal de ${nombreStreamer}. Se abrirá Twitch en una pestaña nueva. ¡Mantén esta pestaña de la web abierta de fondo para no perder tus puntos!`);
+      conectarEscuchaChat(nombreStreamer); // Tu web se pone a escuchar el chat del streamer al que apoyas
+      window.open(`https://twitch.tv/${nombreStreamer}`, '_blank');
+    }
+
+    // EL PROCESO CLAVE: Cada 60 segundos envía la lista de quién está conectado y quién habló
+    function ejecutarPasoDeAsistenciaMinutario() {
+      if(!miNombreTwitch) return;
+      
+      // Consultamos la API de Twitch para ver la lista de espectadores actuales en nuestro chat
+      fetch(`https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${miUsuarioId}&moderator_id=${miUsuarioId}`, {
+        headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + tokenActual }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data && data.data) {
+          const listaAsistencia = data.data.map(user => user.user_login);
+          
+          // Enviamos el reporte completo al cerebro
+          fetch(URL_GOOGLE_SCRIPT, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuarios: listaAsistencia,
+              usuariosQueChatearon: usuariosQueChatearonEsteMinuto,
+              puntos: 0 // Las reglas de puntos se calculan directamente en la hoja
+            })
+          });
+          
+          console.log("Minuto evaluado. Espectadores:", listaAsistencia, "Chatearon:", usuariosQueChatearonEsteMinuto);
+          // Reiniciamos la lista de chat para el próximo minuto
+          usuariosQueChatearonEsteMinuto = [];
+        }
+      }).catch(err => console.log("Streamer no está en vivo o falta iniciar directo de apoyo."));
+    }
   </script>
 </body>
 </html>
