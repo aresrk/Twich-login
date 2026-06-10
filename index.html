@@ -5,73 +5,149 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RXG INDOMINUS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=200;400;600;800&display=swap" rel="stylesheet">
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Montserrat', sans-serif; color: #ffffff; min-height: 100vh; display: flex; justify-content: center; align-items: center; overflow-x: hidden; background-color: #030303; position: relative; }
+    
+    body {
+      font-family: 'Montserrat', sans-serif; color: #ffffff; min-height: 100vh;
+      display: flex; justify-content: center; align-items: center; overflow-x: hidden;
+      background-color: #030303; position: relative;
+    }
+
+    /* Fondo del canvas para los rayos constantes */
     #canvasRayos { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
-    .pantalla { text-align: center; position: absolute; width: 90%; max-width: 550px; padding: 35px 25px; background: rgba(10, 10, 10, 0.82); backdrop-filter: blur(12px); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 12px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.65); transition: all 0.8s ease; z-index: 2; }
+
+    .pantalla {
+      text-align: center; position: absolute; width: 90%; max-width: 550px; padding: 35px 25px;
+      background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(223, 183, 108, 0.25); border-radius: 12px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+      transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2;
+    }
     .oculto { opacity: 0; transform: translateY(-30px) scale(0.95); pointer-events: none; visibility: hidden; }
-    h1 { font-size: 2.4rem; font-weight: 600; letter-spacing: 8px; margin-bottom: 8px; text-transform: uppercase; color: #dfb76c; background: linear-gradient(135deg, #dfb76c 0%, #f3e1b9 50%, #c39645 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .btn-oro { display: inline-block; padding: 14px 40px; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px; color: #0a0a0a; text-decoration: none; text-transform: uppercase; border-radius: 4px; background: linear-gradient(135deg, #dfb76c 0%, #f9e7c4 100%); cursor: pointer; border: none; }
+    
+    h1 {
+      font-size: 2.4rem; font-weight: 600; letter-spacing: 8px; margin-bottom: 8px;
+      text-transform: uppercase; color: #dfb76c; 
+      background: linear-gradient(135deg, #dfb76c 0%, #f3e1b9 50%, #c39645 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0px 4px 15px rgba(223, 183, 108, 0.3));
+    }
+    @media (max-width: 400px) { h1 { font-size: 1.8rem; letter-spacing: 4px; } }
+
+    .subtitulo-autor { font-size: 0.8rem; font-weight: 200; letter-spacing: 4px; color: #aaaaaa; margin-bottom: 40px; text-transform: uppercase; }
+    .subtitulo-autor span { font-weight: 400; color: #dfb76c; }
+    
+    /* Botón de inicio / Apoyar con ráfaga dorada y animación */
+    .btn-oro {
+      display: inline-block; padding: 14px 40px; font-size: 0.8rem; font-weight: 600; letter-spacing: 3px;
+      color: #0a0a0a; text-decoration: none; text-transform: uppercase; border-radius: 4px;
+      background: linear-gradient(135deg, #dfb76c 0%, #f9e7c4 100%);
+      transition: all 0.4s ease; cursor: pointer; box-shadow: 0 4px 15px rgba(223, 183, 108, 0.3); border: none;
+    }
+    .btn-oro:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(223, 183, 108, 0.6); background: linear-gradient(135deg, #f9e7c4 0%, #dfb76c 100%); }
+    
     .perfil-contenedor { display: flex; flex-direction: column; align-items: center; margin-bottom: 10px; width: 100%; }
-    .avatar-twitch { width: 85px; height: 85px; border-radius: 50%; border: 2px solid #dfb76c; margin-bottom: 15px; }
+    .avatar-twitch {
+      width: 85px; height: 85px; border-radius: 50%; border: 2px solid #dfb76c; margin-bottom: 15px;
+      box-shadow: 0 0 25px rgba(223, 183, 108, 0.4); object-fit: cover; background-color: #121212;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    .avatar-twitch.cargado { opacity: 1; }
+
     .marcador-puntos { font-size: 0.85rem; letter-spacing: 2px; color: #f3e1b9; margin-top: 8px; font-weight: 600; text-transform: uppercase; }
-    .barra-contenedor { width: 80%; max-width: 350px; height: 18px; background: rgba(0, 0, 0, 0.7); border: 1px solid rgba(223, 183, 108, 0.35); border-radius: 10px; margin: 12px auto 5px auto; overflow: hidden; padding: 2px; }
-    .barra-progreso { height: 100%; width: 0%; background: linear-gradient(90deg, #c49902, #ffd700, #fff4b8); border-radius: 8px; position: relative; overflow: hidden; transition: width 0.6s ease; }
-    .barra-progreso::after { content: ''; position: absolute; top: 0; left: -150px; bottom: 0; width: 110px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 100%); transform: skewX(-35deg); animation: brilloFeroz 1.8s infinite; }
+    .marcador-puntos span { color: #ffffff; font-weight: 800; text-shadow: 0 0 10px rgba(223, 183, 108, 0.5); }
+
+    /* Barra de carga con la ráfaga plateada veloz */
+    .barra-contenedor {
+      width: 80%; max-width: 350px; height: 18px; background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(223, 183, 108, 0.35); border-radius: 10px; margin: 12px auto 5px auto;
+      overflow: hidden; padding: 2px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8);
+    }
+    .barra-progreso {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #c49902, #ffd700, #fff4b8);
+      border-radius: 8px; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative; overflow: hidden;
+    }
+    .barra-progreso::after {
+      content: ''; position: absolute; top: 0; left: -150px; bottom: 0; width: 110px;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.4) 70%, rgba(255,255,255,0) 100%);
+      transform: skewX(-35deg); filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.9)); animation: brilloFeroz 1.8s infinite;
+    }
     @keyframes brilloFeroz { 0% { left: -150px; } 100% { left: 120%; } }
+
+    .menu-titulo {
+      font-size: 1.6rem; font-weight: 800; letter-spacing: 6px; text-transform: uppercase;
+      background: linear-gradient(180deg, #ffffff 40%, #b3b3b3 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .menu-linea { width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #dfb76c, transparent); margin: 15px auto 30px auto; }
+    
+    /* Grilla de opciones original restaurada */
     .fila-opciones { display: flex; flex-direction: column; gap: 12px; width: 100%; }
-    .btn-opcion { width: 100%; padding: 15px 10px; font-size: 0.75rem; font-weight: 600; color: #dddddd; background: rgba(20, 19, 17, 0.7); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 6px; text-transform: uppercase; cursor: pointer; }
-    .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; }
-    .lista-lives { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; text-align: left; }
-    .tarjeta-live { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 6px; border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
+    @media (min-width: 480px) { .fila-opciones { flex-direction: row; flex-wrap: wrap; justify-content: center; } }
+
+    /* Botones del menú con sus animaciones y bordes dorados suaves al pasar el mouse */
+    .btn-opcion {
+      width: 100%; padding: 15px 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 2px;
+      color: #dddddd; background: rgba(20, 19, 17, 0.7); border: 1px solid rgba(223, 183, 108, 0.2); border-radius: 6px; 
+      text-transform: uppercase; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    @media (min-width: 480px) { .btn-opcion { flex: 1 1 200px; width: auto; } }
+    .btn-opcion:hover { color: #dfb76c; border-color: #dfb76c; background: rgba(223, 183, 108, 0.08); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(223, 183, 108, 0.15); }
+    
+    .btn-logout { position: absolute; top: 20px; left: 20px; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; color: #8c8c8c; background: transparent; border: none; text-transform: uppercase; cursor: pointer; transition: opacity 0.5s ease; z-index: 10; opacity: 0; pointer-events: none; }
+    .btn-logout.visible { opacity: 1; pointer-events: auto; }
+    .btn-logout:hover { color: #dfb76c; }
+
+    /* Seccion de agenda de transmisiones */
+    .lista-lives { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .tarjeta-live { background: rgba(25, 24, 22, 0.8); padding: 15px; border-radius: 6px; border: 1px solid rgba(223, 183, 108, 0.2); border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
+    
+    /* El mensaje exacto solicitado */
+    .msg-vacio { font-size: 0.9rem; color: #aaaaaa; letter-spacing: 2px; text-transform: uppercase; margin: 35px 0; font-style: italic; font-weight: 400; }
   </style>
 </head>
 <body>
 
   <canvas id="canvasRayos"></canvas>
+  <button id="botonCerrarSesion" class="btn-logout" onclick="mostrarSeccion('inicio')">Cerrar Sesión</button>
 
-  <!-- PANTALLA INICIO -->
   <div id="pantallaInicio" class="pantalla">
     <h1>RXG INDOMINUS</h1>
-    <br><br>
-    <a class="btn-oro" href="#" onclick="abrirAutorizacion(event)">Iniciar Sesión con Twitch</a>
+    <div class="subtitulo-autor">Creado por: <span>AresRK</span></div>
+    <a class="btn-oro" href="#" onclick="abrirAutorizacion(event)">Iniciar Sesión</a>
   </div>
 
-  <!-- PANTALLA MENÚ PRINCIPAL -->
   <div id="pantallaMenu" class="pantalla oculto">
     <div class="perfil-contenedor">
-      <img id="userAvatar" class="avatar-twitch" src="">
-      <div id="menuTitulo" style="font-size:1.5rem; color:#dfb76c;">Cargando...</div>
+      <img id="userAvatar" class="avatar-twitch" src="" alt="Perfil">
+      <div id="menuTitulo" class="menu-titulo">Cargando...</div>
       <div class="marcador-puntos">Puntos: <span id="contadorPuntos">0</span> / 100</div>
       <div class="barra-contenedor"><div id="barraProgreso" class="barra-progreso"></div></div>
     </div>
-    <br>
+    <div class="menu-linea"></div>
+    
     <div class="fila-opciones">
-      <button class="btn-opcion" onclick="mostrarSeccion('lives')">🔴 Ver Sección Lives</button>
-      <button class="btn-opcion" onclick="alert('Próximamente')">Ranking / Recompensas</button>
+      <button class="btn-opcion" onclick="alert('Sección Ranking en desarrollo')">Ranking</button>
+      <button class="btn-opcion" onclick="cambiarAPantallaLives()">Lives</button>
+      <button class="btn-opcion" onclick="alert('Sección Recompensas en desarrollo')">Recompensas</button>
+      <button class="btn-opcion" onclick="alert('Sección Comunidad en desarrollo')">Comunidad</button>
+      <button class="btn-opcion" onclick="alert('Sección Soporte en desarrollo')">Soporte</button>
     </div>
   </div>
 
-  <!-- PANTALLA LIVES (SISTEMA DE ASISTENCIA MUTUA) -->
   <div id="pantallaLives" class="pantalla oculto">
-    <h2 style="color:#dfb76c; letter-spacing:3px;">CANALES EN VIVO</h2>
-    <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">Selecciona a quién vas a apoyar para activar tu rastreador de puntos:</p>
+    <div class="menu-titulo" style="font-size:1.4rem;">Transmisiones Activas</div>
+    <div class="menu-linea" style="margin-bottom:15px;"></div>
+    <p style="font-size:0.75rem; color:#aaa; letter-spacing:1px; margin-bottom:10px;">Selecciona un canal para apoyarlo y activar tu acumulación de puntos:</p>
     
-    <div class="lista-lives">
-      <!-- Aquí puedes añadir dinámicamente los streamers de tu grupo -->
-      <div class="tarjeta-live">
-        <div>
-          <strong id="streamerNombre">Canal Principal</strong><br>
-          <span style="font-size:0.75rem; color:#00ffcc;">● Listo para pasar asistencia</span>
-        </div>
-        <button class="btn-oro" style="padding:8px 15px; font-size:0.7rem;" onclick="activarRastreoEIrATwitch('AresRK')">APOYAR</button>
+    <div id="contenedorListaLives" class="lista-lives">
       </div>
-    </div>
-    <br>
-    <button class="btn-opcion" onclick="mostrarSeccion('menu')">Volver al Menú</button>
+    
+    <div class="menu-linea" style="margin-top:20px; margin-bottom:15px;"></div>
+    <button class="btn-opcion" onclick="mostrarSeccion('menu')">Volver al Panel</button>
   </div>
 
   <script>
@@ -80,119 +156,152 @@
     const SCOPES = 'moderator:read:chatters user:read:chat';
     const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec';
 
-    let tokenActual = "";
-    let miUsuarioId = "";
-    let miNombreTwitch = "";
-    let usuariosQueChatearonEsteMinuto = [];
-    let websocketChat = null;
+    let tokenActual = ""; let miUsuarioId = ""; let miNombreTwitch = "";
+    let usuariosQueChatearonEsteMinuto = []; let websocketChat = null;
 
-    // MOTOR DE RAYOS (ESTILO VISUAL)
+    // ==========================================
+    // MOTOR DE RAYOS ELÉCTRICOS REALES Y SEGUIDOS
+    // ==========================================
     const canvas = document.getElementById('canvasRayos'); const ctx = canvas.getContext('2d');
     function ajustarCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', ajustarCanvas); ajustarCanvas();
-    function crearRayo(x1, y1, x2, y2) {
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
-      ctx.strokeStyle = 'rgba(255, 220, 50, 0.6)'; ctx.lineWidth = 2; ctx.stroke();
-    }
-    setInterval(() => { ctx.fillStyle = 'rgba(3, 3, 3, 0.3)'; ctx.fillRect(0,0,canvas.width,canvas.height); if(Math.random()<0.04) crearRayo(Math.random()*canvas.width, 0, Math.random()*canvas.width, canvas.height); }, 50);
 
-    // CONTROL DE PANTALLAS
-    function mostrarSeccion(seccion) {
+    // Función recursiva para dibujar ramas de rayos verdaderos (no palos rectos)
+    function dibujarRamaRayo(x1, y1, x2, y2, desviacion) {
+      let enMedioX = (x1 + x2) / 2;
+      let enMedioY = (y1 + y2) / 2;
+      enMedioX += (Math.random() - 0.5) * desviacion;
+      enMedioY += (Math.random() - 0.5) * desviacion;
+
+      if (desviacion > 4) {
+        dibujarRamaRayo(x1, y1, enMedioX, enMedioY, desviacion / 2);
+        dibujarRamaRayo(enMedioX, enMedioY, x2, y2, desviacion / 2);
+        // Generar pequeñas ramificaciones secundarias aleatorias
+        if (Math.random() < 0.25) {
+          dibujarRamaRayo(enMedioX, enMedioY, enMedioX + (Math.random() - 0.5) * 40, enMedioY + Math.random() * 40, desviacion / 2);
+        }
+      } else {
+        ctx.lineTo(x2, y2);
+      }
+    }
+
+    function lanzarRayoEstructurado() {
+      let inicioX = Math.random() * canvas.width;
+      let finX = inicioX + (Math.random() - 0.5) * 300;
+      
+      ctx.beginPath();
+      ctx.moveTo(inicioX, 0);
+      ctx.lineTo(inicioX, 5); // Pequeño inicio firme
+      
+      dibujarRamaRayo(inicioX, 5, finX, canvas.height, 120);
+      
+      // Estilo de energía dorada brillante e intensa
+      ctx.strokeStyle = 'rgba(243, 225, 185, 0.9)';
+      ctx.lineWidth = 1.5 + Math.random() * 1.5;
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#dfb76c';
+      ctx.stroke();
+      ctx.shadowBlur = 0; // Reset
+    }
+
+    // Bucle de renderizado continuo de alta velocidad
+    function bucleEfectos() {
+      // Crea un rastro de desvanecimiento para que los rayos no desaparezcan bruscamente
+      ctx.fillStyle = 'rgba(3, 3, 3, 0.25)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Frecuencia alta y constante (18% de probabilidad por fotograma de generar impactos)
+      if (Math.random() < 0.18) {
+        lanzarRayoEstructurado();
+        // Destello ambiental rápido en el fondo
+        if(Math.random() < 0.3) {
+          ctx.fillStyle = 'rgba(223, 183, 108, 0.04)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      requestAnimationFrame(bucleEfectos);
+    }
+    requestAnimationFrame(bucleEfectos);
+    // ==========================================
+
+    function mostrarSeccion(sec) {
       document.getElementById('pantallaInicio').classList.add('oculto');
       document.getElementById('pantallaMenu').classList.add('oculto');
       document.getElementById('pantallaLives').classList.add('oculto');
-      if(seccion === 'menu') document.getElementById('pantallaMenu').classList.remove('oculto');
-      if(seccion === 'lives') document.getElementById('pantallaLives').classList.remove('oculto');
+      if(sec === 'inicio') { document.getElementById('pantallaInicio').classList.remove('oculto'); document.getElementById('botonCerrarSesion').classList.remove('visible'); }
+      if(sec === 'menu') document.getElementById('pantallaMenu').classList.remove('oculto');
+      if(sec === 'lives') document.getElementById('pantallaLives').classList.remove('oculto');
     }
 
-    function abrirAutorizacion(e) {
-      e.preventDefault();
-      window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&force_verify=true`;
-    }
+    function abrirAutorizacion(e) { e.preventDefault(); window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=token&scope=${encodeURIComponent(SCOPES)}&force_verify=true`; }
 
     window.onload = function() {
       const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
       tokenActual = hashParams.get('access_token');
-      if (tokenActual) {
-        mostrarSeccion('menu');
-        obtenerDatosUsuario();
-      }
+      if (tokenActual) { mostrarSeccion('menu'); document.getElementById('botonCerrarSesion').classList.add('visible'); obtenerDatosUsuario(); }
     };
 
     function obtenerDatosUsuario() {
       fetch('https://api.twitch.tv/helix/users', { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + tokenActual } })
-      .then(r => r.json())
-      .then(d => {
-        const u = d.data[0];
-        miUsuarioId = u.id;
-        miNombreTwitch = u.login;
+      .then(r => r.json()).then(d => {
+        const u = d.data[0]; miUsuarioId = u.id; miNombreTwitch = u.login;
         document.getElementById('menuTitulo').innerText = "Hola " + u.display_name;
-        document.getElementById('userAvatar').src = u.profile_image_url;
-        
-        // Conexión pasiva al chat propio para escuchar si alguien nos ayuda en nuestro canal
+        const av = document.getElementById('userAvatar'); av.src = u.profile_image_url; av.classList.add('cargado');
         conectarEscuchaChat(u.login);
-        
-        // Bucle de asistencia: Cada 1 minuto (60000 ms) pasa lista de quién está en nuestro chat
         setInterval(ejecutarPasoDeAsistenciaMinutario, 60000);
       });
     }
 
-    // CONECTAR AL CHAT VÍA WEBSOCKET PARA CAPTURAR COMENTARIOS EN TIEMPO REAL
     function conectarEscuchaChat(canal) {
       if(websocketChat) websocketChat.close();
       websocketChat = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-      websocketChat.onopen = () => {
-        websocketChat.send('PASS oauth:justinfan12345');
-        websocketChat.send('NICK justinfan12345');
-        websocketChat.send('JOIN #' + canal.toLowerCase());
-      };
-      websocketChat.onmessage = (e) => {
-        if(e.data.includes('PRIVMSG')) {
-          let usuario = e.data.split('!')[0].substring(1).toLowerCase();
-          if(usuariosQueChatearonEsteMinuto.indexOf(usuario) === -1) {
-            usuariosQueChatearonEsteMinuto.push(usuario); // Registramos que este usuario comentó
-          }
+      websocketChat.onopen = () => { websocketChat.send('PASS oauth:justinfan12345'); websocketChat.send('NICK justinfan12345'); websocketChat.send('JOIN #' + canal.toLowerCase()); };
+      websocketChat.onmessage = (e) => { if(e.data.includes('PRIVMSG')) { let user = e.data.split('!')[0].substring(1).toLowerCase(); if(usuariosQueChatearonEsteMinuto.indexOf(user) === -1) usuariosQueChatearonEsteMinuto.push(user); } };
+    }
+
+    function cambiarAPantallaLives() {
+      mostrarSeccion('lives');
+      const contenedor = document.getElementById('contenedorListaLives');
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px;">Consultando agenda...</div>';
+      
+      fetch(URL_GOOGLE_SCRIPT)
+      .then(r => r.json())
+      .then(canalesActivos => {
+        contenedor.innerHTML = "";
+        if(!canalesActivos || canalesActivos.length === 0) {
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
+        } else {
+          canalesActivos.forEach(canal => {
+            contenedor.innerHTML += `
+              <div class="tarjeta-live">
+                <div>
+                  <strong style="color:#fff; letter-spacing:1px; text-transform:uppercase; font-size:0.9rem;">${canal.streamer}</strong><br>
+                  <span style="font-size:0.7rem; color:#dfb76c;">● Agendado para hoy</span>
+                </div>
+                <button class="btn-oro" style="padding:8px 15px; font-size:0.65rem;" onclick="activarRastreoEIrATwitch('${canal.streamer}')">APOYAR</button>
+              </div>`;
+          });
         }
-      };
+      })
+      .catch(() => { contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>'; });
     }
 
-    // ACCIÓN DEL BOTÓN "APOYAR": Redirige al streamer y sintoniza el chat de ese streamer
-    function activarRastreoEIrATwitch(nombreStreamer) {
-      alert(`Activando rastreo para el canal de ${nombreStreamer}. Se abrirá Twitch en una pestaña nueva. ¡Mantén esta pestaña de la web abierta de fondo para no perder tus puntos!`);
-      conectarEscuchaChat(nombreStreamer); // Tu web se pone a escuchar el chat del streamer al que apoyas
-      window.open(`https://twitch.tv/${nombreStreamer}`, '_blank');
+    function activarRastreoEIrATwitch(streamer) {
+      alert(`Rastreador enlazado a ${streamer}. Abre Twitch en la pestaña que aparecerá y chatea. ¡Mantén nuestra web abierta para validar tus puntos!`);
+      conectarEscuchaChat(streamer);
+      window.open(`https://twitch.tv/${streamer}`, '_blank');
     }
 
-    // EL PROCESO CLAVE: Cada 60 segundos envía la lista de quién está conectado y quién habló
     function ejecutarPasoDeAsistenciaMinutario() {
       if(!miNombreTwitch) return;
-      
-      // Consultamos la API de Twitch para ver la lista de espectadores actuales en nuestro chat
-      fetch(`https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${miUsuarioId}&moderator_id=${miUsuarioId}`, {
-        headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + tokenActual }
-      })
-      .then(r => r.json())
-      .then(data => {
+      fetch(`https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${miUsuarioId}&moderator_id=${miUsuarioId}`, { headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + tokenActual } })
+      .then(r => r.json()).then(data => {
         if(data && data.data) {
           const listaAsistencia = data.data.map(user => user.user_login);
-          
-          // Enviamos el reporte completo al cerebro
-          fetch(URL_GOOGLE_SCRIPT, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              usuarios: listaAsistencia,
-              usuariosQueChatearon: usuariosQueChatearonEsteMinuto,
-              puntos: 0 // Las reglas de puntos se calculan directamente en la hoja
-            })
-          });
-          
-          console.log("Minuto evaluado. Espectadores:", listaAsistencia, "Chatearon:", usuariosQueChatearonEsteMinuto);
-          // Reiniciamos la lista de chat para el próximo minuto
+          fetch(URL_GOOGLE_SCRIPT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ usuarios: listaAsistencia, usuariosQueChatearon: usuariosQueChatearonEsteMinuto }) });
           usuariosQueChatearonEsteMinuto = [];
         }
-      }).catch(err => console.log("Streamer no está en vivo o falta iniciar directo de apoyo."));
+      }).catch(err => {});
     }
   </script>
 </body>
