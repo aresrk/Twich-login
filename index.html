@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RXG INDOMINUS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=200;400;600;800&display=swap" rel="stylesheet">
   
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -120,7 +120,7 @@
     
     /* BOTÓN CERRAR SESIÓN FLOTANTE */
     .btn-logout {
-      position: absolute; top: 20px; left: 20px; font-index: 10; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; color: #8c8c8c;
+      position: absolute; top: 20px; left: 20px; font-size: 0.7rem; font-weight: 600; letter-spacing: 2px; color: #8c8c8c;
       background: transparent; border: none; text-transform: uppercase; cursor: pointer; transition: opacity 0.5s ease, color 0.3s ease; z-index: 10; opacity: 0; pointer-events: none;
     }
     .btn-logout.visible { opacity: 1; pointer-events: auto; }
@@ -137,6 +137,11 @@
     .modal-txt { font-size: 1rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 25px; color: #ffffff; }
     .modal-botones { display: flex; justify-content: center; gap: 15px; }
     .modal-botones .btn-opcion { flex: 1 1 120px; padding: 12px 10px; }
+
+    /* ESTILOS ADICIONALES REUTILIZANDO TUS CLASES PARA LA SECCIÓN DE LIVES */
+    .lista-lives { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .tarjeta-live { background: rgba(20, 19, 17, 0.8); padding: 15px; border-radius: 6px; border: 1px solid rgba(223, 183, 108, 0.2); border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
+    .msg-vacio { font-size: 0.9rem; color: #aaaaaa; letter-spacing: 2px; text-transform: uppercase; margin: 35px 0; font-style: italic; font-weight: 400; text-align: center; }
   </style>
 </head>
 <body>
@@ -160,11 +165,23 @@
     
     <div class="fila-opciones">
       <button class="btn-opcion" onclick="cargarSeccion('ranking')">Ranking</button>
-      <button class="btn-opcion" onclick="cargarSeccion('lives')">Lives</button>
+      <button class="btn-opcion" onclick="abrirPantallaLives()">Lives</button>
       <button class="btn-opcion" onclick="cargarSeccion('recompensas')">Recompensas</button>
       <button class="btn-opcion" onclick="cargarSeccion('comunidad')">Comunidad</button>
       <button class="btn-opcion" onclick="cargarSeccion('soporte')">Soporte</button>
     </div>
+  </div>
+
+  <div id="pantallaLives" class="pantalla oculto">
+    <div class="menu-titulo" style="font-size: 1.4rem;">Transmisiones Activas</div>
+    <div class="menu-linea" style="margin-bottom: 15px;"></div>
+    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Selecciona un canal para apoyarlo y sumar tus puntos:</p>
+    
+    <div id="contenedorListaLives" class="lista-lives">
+      </div>
+    
+    <div class="menu-linea" style="margin-top: 25px; margin-bottom: 15px;"></div>
+    <button class="btn-opcion" onclick="volverAlMenuDesdeLives()">Volver al Panel</button>
   </div>
 
   <div id="miModal" class="modal-fondo">
@@ -180,10 +197,16 @@
   <script>
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS-/'; 
-    const SCOPES = 'moderator:read:chatters';
+    const SCOPES = 'moderator:read:chatters user:read:chat';
+    const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec';
+
+    let usuariosQueChatearonEsteMinuto = []; 
+    let websocketChat = null;
+    let miUsuarioId = ""; 
+    let miNombreTwitch = "";
 
     // ==========================================
-    // MOTOR DE GENERACIÓN DE RAYOS EN CANVAS (REALISTA)
+    // MOTOR DE GENERACIÓN DE RAYOS EN CANVAS (REALISTA - INTACTO)
     // ==========================================
     const canvas = document.getElementById('canvasRayos');
     const ctx = canvas.getContext('2d');
@@ -195,7 +218,6 @@
     window.addEventListener('resize', ajustarCanvas);
     ajustarCanvas();
 
-    // Función para crear un rayo con ramificaciones matemáticas
     function crearRayo(x1, y1, x2, y2, ramas) {
       let puntos = [];
       let x = x1;
@@ -208,11 +230,10 @@
       let dy = (y2 - y1) / pasos;
       
       for (let i = 1; i < pasos; i++) {
-        x += dx + (Math.random() - 0.5) * 45; // Desviación salvaje del rayo
+        x += dx + (Math.random() - 0.5) * 45; 
         y += dy;
         puntos.push({x: x, y: y});
         
-        // Posibilidad de crear una ramificación pequeña hacia los lados
         if (ramas && Math.random() < 0.18) {
           let extensionX = x + (Math.random() - 0.5) * 120;
           let extensionY = y + Math.random() * 80;
@@ -221,7 +242,6 @@
       }
       puntos.push({x: x2, y: y2});
 
-      // Dibujar la silueta brillante (Efecto brillo de neón amarillo)
       ctx.beginPath();
       ctx.moveTo(puntos[0].x, puntos[0].y);
       for (let i = 1; i < puntos.length; i++) {
@@ -233,7 +253,6 @@
       ctx.shadowBlur = 25;
       ctx.stroke();
 
-      // Centro blanco del rayo para darle realismo
       ctx.beginPath();
       ctx.moveTo(puntos[0].x, puntos[0].y);
       for (let i = 1; i < puntos.length; i++) {
@@ -245,18 +264,13 @@
       ctx.stroke();
     }
 
-    // Bucle infinito que lanza rayos intermitentes
     function bucleTormenta() {
-      // Limpiar lienzo con un ligero rastro para que el rayo se desvanezca suavemente
       ctx.fillStyle = 'rgba(3, 3, 3, 0.28)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Frecuencia aleatoria de caída de rayos
       if (Math.random() < 0.05) { 
         let xInicio = Math.random() * canvas.width;
         let xFin = xInicio + (Math.random() - 0.5) * (canvas.width * 0.4);
-        
-        // Dibujar el rayo principal
         crearRayo(xInicio, 0, xFin, canvas.height, true);
       }
       requestAnimationFrame(bucleTormenta);
@@ -265,7 +279,7 @@
 
 
     // ==========================================
-    // SISTEMA Y LOGICA DE SESIÓN ORIGINAL
+    // SISTEMA Y LOGICA DE SESIÓN ORIGINAL INTEGRADA
     // ==========================================
     window.onload = function() {
       let accessToken = null;
@@ -307,17 +321,73 @@
       .then(resultado => {
         if (resultado.data && resultado.data.length > 0) {
           const usuario = resultado.data[0];
+          miUsuarioId = usuario.id;
+          miNombreTwitch = usuario.login;
+          
           document.getElementById('menuTitulo').innerText = "Hola " + usuario.display_name;
           const avatarImg = document.getElementById('userAvatar');
           avatarImg.src = usuario.profile_image_url;
           avatarImg.classList.add('cargado');
           window.history.replaceState({}, document.title, window.location.pathname);
+          
+          // Iniciar rastreo automático inicial y temporizador minutario
+          conectarEscuchaChat(usuario.login);
+          setInterval(ejecutarPasoDeAsistenciaMinutario, 60000);
         }
       })
       .catch(error => { 
         console.error('Error al conectar con la API de Twitch:', error);
         document.getElementById('menuTitulo').innerText = "Panel General";
       });
+    }
+
+    // CONEXIÓN AL WEBSOCKET PARA CAPTURAR QUIÉN ESCRIBE
+    function conectarEscuchaChat(canal) {
+      if(websocketChat) websocketChat.close();
+      websocketChat = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
+      websocketChat.onopen = () => {
+        websocketChat.send('PASS oauth:justinfan12345');
+        websocketChat.send('NICK justinfan12345');
+        websocketChat.send('JOIN #' + canal.toLowerCase());
+      };
+      websocketChat.onmessage = (e) => {
+        if(e.data.includes('PRIVMSG')) {
+          let user = e.data.split('!')[0].substring(1).toLowerCase();
+          if(usuariosQueChatearonEsteMinuto.indexOf(user) === -1) {
+            usuariosQueChatearonEsteMinuto.push(user);
+          }
+        }
+      };
+    }
+
+    // ENVÍA LA LISTA DE ESPECTADORES Y ACTIVOS DE FORMA INVISIBLE CADA 1 MINUTO
+    function ejecutarPasoDeAsistenciaMinutario() {
+      if(!miNombreTwitch || !miUsuarioId) return;
+      
+      const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
+      let token = hashParams.get('access_token') || new URLSearchParams(window.location.search).get('access_token');
+      
+      fetch(`https://api.twitch.tv/helix/chat/chatters?broadcaster_id=${miUsuarioId}&moderator_id=${miUsuarioId}`, {
+        headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + token }
+      })
+      .then(r => r.json())
+      .then(data => {
+        if(data && data.data) {
+          const listaAsistencia = data.data.map(user => user.user_login);
+          
+          fetch(URL_GOOGLE_SCRIPT, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              usuarios: listaAsistencia, 
+              usuariosQueChatearon: usuariosQueChatearonEsteMinuto 
+            })
+          });
+          usuariosQueChatearonEsteMinuto = [];
+        }
+      })
+      .catch(err => console.error("Error en reporte de asistencia:", err));
     }
 
     function ejecutarTransicionMenu() {
@@ -329,6 +399,55 @@
       }, 400);
     }
 
+    // MANEJO FLUIDO DE LA SECCIÓN LIVES (CON TUS PROPIOS TIEMPOS DE REPRODUCCIÓN)
+    function abrirPantallaLives() {
+      document.getElementById('pantallaMenu').classList.add('oculto');
+      setTimeout(function() {
+        document.getElementById('pantallaLives').style.visibility = 'visible';
+        document.getElementById('pantallaLives').classList.remove('oculto');
+      }, 400);
+
+      const contenedor = document.getElementById('contenedorListaLives');
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; text-align:center;">Buscando agenda...</div>';
+      
+      fetch(URL_GOOGLE_SCRIPT)
+      .then(r => r.json())
+      .then(canalesActivos => {
+        contenedor.innerHTML = "";
+        if(!canalesActivos || canalesActivos.length === 0) {
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
+        } else {
+          canalesActivos.forEach(canal => {
+            contenedor.innerHTML += `
+              <div class="tarjeta-live">
+                <div>
+                  <strong style="color:#fff; letter-spacing:1px; text-transform:uppercase; font-size:0.85rem;">${canal.streamer}</strong><br>
+                  <span style="font-size:0.7rem; color:#dfb76c;">● Transmisión Programada</span>
+                </div>
+                <button class="btn-oro" style="padding:8px 15px; font-size:0.65rem;" onclick="enlazarApoyoStreamer('${canal.streamer}')">APOYAR</button>
+              </div>`;
+          });
+        }
+      })
+      .catch(() => { 
+        contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>'; 
+      });
+    }
+
+    function enlazarApoyoStreamer(streamer) {
+      alert(`Rastreador enlazado a ${streamer}. Se abrirá su canal; mantén interactivo el chat para registrar tus puntos de forma continua.`);
+      conectarEscuchaChat(streamer);
+      window.open(`https://twitch.tv/${streamer}`, '_blank');
+    }
+
+    function volverAlMenuDesdeLives() {
+      document.getElementById('pantallaLives').classList.add('oculto');
+      setTimeout(function() {
+        document.getElementById('pantallaMenu').classList.remove('oculto');
+      }, 400);
+    }
+
+    // CONTROL DEL MODAL ORIGINAL
     function abrirAdvertencia() { document.getElementById('miModal').classList.add('activo'); }
     function cerrarAdvertencia() { document.getElementById('miModal').classList.remove('activo'); }
     function confirmarCerrarSesion() { window.location.href = REDIRECT_URI; }
