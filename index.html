@@ -273,12 +273,10 @@
     const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec';
 
     let canalSeleccionado = null; 
-    let usuariosQueChatearonEsteMinuto = []; 
-    let websocketChat = null;
     let miUsuarioId = ""; 
     let miNombreTwitch = "";
     let datosAgendaGlobal = {};
-    let diaAgendaSeleccionado = 'Lunes'; 
+    let diaAgendaSeleccionado = 'Lunes'; // Controla la pestaña activa
 
     // ==========================================
     // MOTOR DE RAYOS EN CANVAS
@@ -395,9 +393,9 @@
 
           actualizarBarraPuntos(usuario.login);
           canalSeleccionado = usuario.login;
-          conectarEscuchaChat(usuario.login);
           
-          setInterval(ejecutarPasoDeAsistenciaMinutario, 60000);
+          // Ahora la página solo actualiza visualmente los puntos desde tu Excel cada minuto
+          setInterval(() => { actualizarBarraPuntos(miNombreTwitch); }, 60000);
         }
       })
       .catch(error => { 
@@ -418,38 +416,6 @@
         }
       })
       .catch(err => console.error("Error al obtener puntos:", err));
-    }
-
-    function conectarEscuchaChat(canal) {
-      if(websocketChat) websocketChat.close();
-      websocketChat = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-      websocketChat.onopen = () => {
-        websocketChat.send('PASS oauth:justinfan12345');
-        websocketChat.send('NICK justinfan12345');
-        websocketChat.send('JOIN #' + canal.toLowerCase());
-      };
-      websocketChat.onmessage = (e) => {
-        if(e.data.includes('PRIVMSG')) {
-          let user = e.data.split('!')[0].substring(1).toLowerCase();
-          if(user === miNombreTwitch.toLowerCase() && !usuariosQueChatearonEsteMinuto.includes(user)) {
-            usuariosQueChatearonEsteMinuto.push(user);
-          }
-        }
-      };
-    }
-
-    function ejecutarPasoDeAsistenciaMinutario() {
-      if(!miNombreTwitch || !canalSeleccionado) return;
-      let chatteo = usuariosQueChatearonEsteMinuto.includes(miNombreTwitch.toLowerCase()) ? [miNombreTwitch] : [];
-      
-      fetch(URL_GOOGLE_SCRIPT, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify({ usuarios: [miNombreTwitch], usuariosQueChatearon: chatteo })
-      }).then(() => {
-        setTimeout(() => { actualizarBarraPuntos(miNombreTwitch); }, 2500);
-      });
-      usuariosQueChatearonEsteMinuto = [];
     }
 
     function ejecutarTransicionMenu() {
@@ -476,28 +442,25 @@
     }
 
     // ==========================================
-    // SECCIÓN AGENDA Semanal (CORREGIDO PARA HACER LA TRANSICIÓN BIEN)
+    // SECCIÓN AGENDA Semanal
     // ==========================================
     function abrirPantallaAgenda() {
       document.getElementById('pantallaMenu').classList.add('oculto');
+      document.getElementById('contenedorListaAgenda').innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Sincronizando reloj...</div>';
       
-      // Reiniciamos y mostramos la pantalla de carga limpia de la agenda
-      const contenedor = document.getElementById('contenedorListaAgenda');
-      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Sincronizando reloj...</div>';
-      
-      // Hacemos visible el contenedor de la agenda antes de rellenar datos
-      document.getElementById('pantallaAgenda').style.visibility = 'visible';
-      document.getElementById('pantallaAgenda').classList.remove('oculto');
-
       fetch(`${URL_GOOGLE_SCRIPT}?accion=obtener_agenda`)
       .then(res => res.json())
       .then(data => {
         datosAgendaGlobal = data;
         renderizarHorasAgenda();
+        setTimeout(function() {
+          document.getElementById('pantallaAgenda').style.visibility = 'visible';
+          document.getElementById('pantallaAgenda').classList.remove('oculto');
+        }, 400);
       })
       .catch(err => {
         console.error(err);
-        contenedor.innerHTML = '<div class="msg-vacio">Error de conexión con la agenda</div>';
+        document.getElementById('contenedorListaAgenda').innerHTML = '<div class="msg-vacio">Error de conexión con la agenda</div>';
       });
     }
 
@@ -589,10 +552,11 @@
     // ==========================================
     function abrirPantallaLives() {
       document.getElementById('pantallaMenu').classList.add('oculto');
-      
-      document.getElementById('pantallaLives').style.visibility = 'visible';
-      document.getElementById('pantallaLives').classList.remove('oculto');
       cargarLives(); 
+      setTimeout(function() {
+        document.getElementById('pantallaLives').style.visibility = 'visible';
+        document.getElementById('pantallaLives').classList.remove('oculto');
+      }, 400);
     }
 
     function cargarLives() {
@@ -629,8 +593,7 @@
 
     function seleccionarCanal(canal) {
       canalSeleccionado = canal;
-      alert(`¡Rastreador enlazado a ${canal.toUpperCase()}! Se abrirá su canal; mantén interactivo el chat para registrar tus puntos de forma continua.`);
-      conectarEscuchaChat(canal); 
+      alert(`¡Rastreador enlazado a ${canal.toUpperCase()}! Se abrirá su canal. El Bot Maestro registrará tus puntos automáticamente en la nube.`);
       window.open(`https://twitch.tv/${canal}`, '_blank'); 
       volverAlMenuDesdeLives();   
     }
@@ -653,7 +616,6 @@
   </script>
 </body>
 </html>
-
 
 
 
