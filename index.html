@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -213,7 +214,7 @@
     </div>
   </div>
 
-  <script>
+  <script {sandbox=""}>
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS-/'; 
     const SCOPES = 'moderator:read:chatters user:read:chat';
@@ -323,7 +324,6 @@
           avatarImg.classList.add('cargado');
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          // AQUÍ SE REGISTRA AL USUARIO EN DRIVE DE FORMA AUTOMÁTICA
           fetch(URL_GOOGLE_SCRIPT, {
             method: "POST",
             mode: "no-cors",
@@ -402,7 +402,7 @@
     }
 
     // ==========================================
-    // SECCIÓN LIVES (LEE DE DRIVE AUTOMÁTICAMENTE)
+    // SECCIÓN LIVES (CON ESTILO ORIGINAL RESTAURADO)
     // ==========================================
     function abrirPantallaLives() {
       document.getElementById('pantallaMenu').classList.add('oculto');
@@ -415,7 +415,8 @@
 
     function cargarLives() {
       const contenedor = document.getElementById('contenedorListaLives');
-      contenedor.innerHTML = '<div class="msg-vacio">Consultando base de datos de la comunidad...</div>';
+      // Mensaje de carga con estilo y color original
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; text-align:center;">Buscando transmisiones...</div>';
 
       fetch(`${URL_GOOGLE_SCRIPT}?obtenerStreamers=true`)
       .then(res => res.json())
@@ -423,7 +424,7 @@
         STREAMERS_COMUNIDAD = listaCanales || [];
 
         if (STREAMERS_COMUNIDAD.length === 0) {
-          contenedor.innerHTML = '<div class="msg-vacio">No hay canales guardados en la base de datos aún.</div>';
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiones</div>';
           return;
         }
 
@@ -443,19 +444,20 @@
         
         if (data.data && data.data.length > 0) {
           data.data.forEach(stream => {
+            // Se inyecta la estructura HTML exacta del diseño original 
             let html = `
             <div class="tarjeta-live">
               <div>
-                <strong style="color: #dfb76c; display: block; margin-bottom: 5px; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;">${stream.user_name}</strong>
-                <span style="font-size: 0.7rem; color: #aaaaaa;">🟢 ${stream.viewer_count} Viendo - ${stream.game_name}</span>
+                <strong style="color:#fff; letter-spacing:1px; text-transform:uppercase; font-size:0.85rem;">${stream.user_name}</strong><br>
+                <span style="font-size:0.7rem; color:#dfb76c;">🟢 ${stream.viewer_count} Viendo - ${stream.game_name}</span>
               </div>
-              <button class="btn-opcion" style="padding: 10px 15px; flex: 0 0 auto; width: auto;" onclick="seleccionarCanal('${stream.user_login}')">VER</button>
+              <button class="btn-oro" style="padding:8px 15px; font-size:0.65rem;" onclick="seleccionarCanal('${stream.user_login}')">APOYAR</button>
             </div>
             `;
             contenedor.innerHTML += html;
           });
         } else {
-          contenedor.innerHTML = '<div class="msg-vacio">No hay transmisiones activas ahora mismo.</div>';
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiones</div>';
         }
       })
       .catch(err => {
@@ -466,8 +468,9 @@
 
     function seleccionarCanal(canal) {
       canalSeleccionado = canal;
-      alert(`¡Conectado al directo de ${canal.toUpperCase()}! Deja esta pestaña abierta para acumular tus puntos de espectador.`);
+      alert(`¡Rastreador enlazado a ${canal.toUpperCase()}! Se abrirá su canal; mantén interactivo el chat para registrar tus puntos de forma continua.`);
       conectarEscuchaChat(canal); 
+      window.open(`https://twitch.tv/${canal}`, '_blank'); // Abre el stream en pestaña nueva (Original)
       volverAlMenuDesdeLives();   
     }
 
