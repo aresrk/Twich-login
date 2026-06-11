@@ -186,7 +186,7 @@
     <div class="fila-opciones">
       <button class="btn-opcion" onclick="cargarSeccion('ranking')">Ranking</button>
       <button class="btn-opcion" onclick="abrirPantallaLives()">Lives</button>
-      <button class="btn-opcion" onclick="cargarSeccion('recompensas')">Recompensas</button>
+      <button class="btn-opcion" onclick="abrirPantallaAgenda()">Agenda</button>
       <button class="btn-opcion" onclick="cargarSeccion('comunidad')">Comunidad</button>
       <button class="btn-opcion" onclick="cargarSeccion('soporte')">Soporte</button>
     </div>
@@ -195,12 +195,32 @@
   <div id="pantallaLives" class="pantalla oculto">
     <div class="menu-titulo" style="font-size: 1.4rem;">Transmisiones Activas</div>
     <div class="menu-linea" style="margin-bottom: 15px;"></div>
-    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Selecciona un canal para apoyarlo y sumar tus puntos:</p>
+    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Apoya a los streamers agendados en este bloque horario:</p>
     
     <div id="contenedorListaLives" class="lista-lives"></div>
     
     <div class="menu-linea" style="margin-top: 25px; margin-bottom: 15px;"></div>
     <button class="btn-opcion" onclick="volverAlMenuDesdeLives()">Volver al Panel</button>
+  </div>
+
+  <div id="pantallaAgenda" class="pantalla oculto">
+    <div class="menu-titulo" style="font-size: 1.4rem;">Agenda Semanal</div>
+    <div class="menu-linea" style="margin-bottom: 15px;"></div>
+    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Selecciona un día (Horarios adaptados a tu reloj local):</p>
+    
+    <select id="agendaDiaSelect" class="btn-opcion" style="width: 100%; margin-bottom: 20px; text-align: center; text-align-last: center;" onchange="renderizarHorasAgenda()">
+      <option value="Lunes">Lunes</option>
+      <option value="Martes">Martes</option>
+      <option value="Miércoles">Miércoles</option>
+      <option value="Jueves">Jueves</option>
+      <option value="Viernes">Viernes</option>
+      <option value="Sábado">Sábado</option>
+    </select>
+
+    <div id="contenedorListaAgenda" class="lista-lives" style="max-height: 280px;"></div>
+    
+    <div class="menu-linea" style="margin-top: 25px; margin-bottom: 15px;"></div>
+    <button class="btn-opcion" onclick="volverAlMenuDesdeAgenda()">Volver al Panel</button>
   </div>
 
   <div id="miModal" class="modal-fondo">
@@ -219,13 +239,12 @@
     const SCOPES = 'moderator:read:chatters user:read:chat';
     const URL_GOOGLE_SCRIPT = 'https://script.google.com/macros/s/AKfycbx8Qp0pmzT5lrqjl-mOTXaMIHiEL6jxlFbEUKS3OcoJu7-C8NelthjNqzqTnRhdwFR6/exec';
 
-    let STREAMERS_COMUNIDAD = []; 
     let canalSeleccionado = null; 
-
     let usuariosQueChatearonEsteMinuto = []; 
     let websocketChat = null;
     let miUsuarioId = ""; 
     let miNombreTwitch = "";
+    let datosAgendaGlobal = {};
 
     // ==========================================
     // MOTOR DE RAYOS EN CANVAS
@@ -330,7 +349,6 @@
           avatarImg.classList.add('cargado');
           window.history.replaceState({}, document.title, window.location.pathname);
           
-          // --- CORRECCIÓN APLICADA AQUÍ ---
           fetch(URL_GOOGLE_SCRIPT, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -338,7 +356,6 @@
           });
 
           actualizarBarraPuntos(usuario.login);
-
           canalSeleccionado = usuario.login;
           conectarEscuchaChat(usuario.login);
           
@@ -387,7 +404,6 @@
       if(!miNombreTwitch || !canalSeleccionado) return;
       let chatteo = usuariosQueChatearonEsteMinuto.includes(miNombreTwitch.toLowerCase()) ? [miNombreTwitch] : [];
       
-      // --- CORRECCIÓN APLICADA AQUÍ ---
       fetch(URL_GOOGLE_SCRIPT, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -408,7 +424,118 @@
     }
 
     // ==========================================
-    // SECCIÓN LIVES
+    // SISTEMA DE CONVERSIÓN DE ZONA HORARIA AUTOMÁTICA
+    // ==========================================
+    function obtenerDiferenciaHorariaMX() {
+      try {
+        const mxStr = new Date().toLocaleString("en-US", { timeZone: "America/Mexico_City" });
+        const mxDate = new Date(mxStr);
+        const localDate = new Date();
+        return Math.round((localDate.getTime() - mxDate.getTime()) / 3600000);
+      } catch (e) {
+        return 0; 
+      }
+    }
+
+    // ==========================================
+    // SECCIÓN AGENDA Semanal
+    // ==========================================
+    function abrirPantallaAgenda() {
+      document.getElementById('pantallaMenu').classList.add('oculto');
+      document.getElementById('contenedorListaAgenda').innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Sincronizando reloj...</div>';
+      
+      fetch(`${URL_GOOGLE_SCRIPT}?accion=obtener_agenda`)
+      .then(res => res.json())
+      .then(data => {
+        datosAgendaGlobal = data;
+        renderizarHorasAgenda();
+        setTimeout(function() {
+          document.getElementById('pantallaAgenda').style.visibility = 'visible';
+          document.getElementById('pantallaAgenda').classList.remove('oculto');
+        }, 400);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('contenedorListaAgenda').innerHTML = '<div class="msg-vacio">Error de conexión con la agenda</div>';
+      });
+    }
+
+    function renderizarHorasAgenda() {
+      const dia = document.getElementById('agendaDiaSelect').value;
+      const contenedor = document.getElementById('contenedorListaAgenda');
+      contenedor.innerHTML = '';
+      
+      const diff = obtenerDiferenciaHorariaMX();
+      const bloqueDia = datosAgendaGlobal[dia] || {};
+      
+      for (let hMX = 9; hMX <= 23; hMX++) {
+        const cupos = bloqueDia[hMX] || ["", "", ""];
+        const ocupados = cupos.filter(c => c !== "").length;
+        
+        let hLocal = (hMX + diff + 24) % 24;
+        let ampm = hLocal >= 12 ? 'PM' : 'AM';
+        let h12 = hLocal % 12;
+        if (h12 === 0) h12 = 12;
+        let horaFormateada = (h12 < 10 ? '0' : '') + h12 + ':00 ' + ampm;
+        
+        const yaAgendadoYo = cupos.map(c => c.toLowerCase()).includes(miNombreTwitch.toLowerCase());
+        
+        let btnTexto = yaAgendadoYo ? "CANCELAR" : (ocupados >= 3 ? "LLENO" : "AGENDAR");
+        let btnDeshabilitado = (!yaAgendadoYo && ocupados >= 3) ? "disabled style='opacity:0.4; cursor:not-allowed;'" : "";
+        let nombresTxt = cupos.filter(c => c !== "").join(", ") || "Disponible";
+        
+        let html = `
+        <div class="tarjeta-live" style="flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 15px;">
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+            <strong style="color:#fff; letter-spacing:1px; font-size:0.85rem;">${horaFormateada}</strong>
+            <span style="font-size:0.7rem; color:#dfb76c; font-weight:600;">${ocupados}/3 CUPOS</span>
+          </div>
+          <div style="width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 2px;">
+            <span style="font-size:0.75rem; color:#aaa; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">👤 ${nombresTxt}</span>
+            <button class="btn-oro" style="padding:6px 12px; font-size:0.6rem; min-width:85px; text-align:center;" ${btnDeshabilitado} onclick="alternarCupoAgenda('${dia}', ${hMX}, ${yaAgendadoYo})">${btnTexto}</button>
+          </div>
+        </div>
+        `;
+        contenedor.innerHTML += html;
+      }
+    }
+
+    function alternarCupoAgenda(dia, horaMX, cancelar) {
+      if (!miNombreTwitch) return;
+      const accion = cancelar ? "cancelar_agenda" : "agendar";
+      
+      document.getElementById('contenedorListaAgenda').innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Guardando espacio...</div>';
+      
+      fetch(URL_GOOGLE_SCRIPT, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ accion: accion, usuario: miNombreTwitch, dia: dia, horaMX: horaMX })
+      })
+      .then(res => res.json())
+      .then(res => {
+        if (res.status === "success" || res.status === "cancelled") {
+          abrirPantallaAgenda();
+        } else {
+          alert(res.message || "Error al procesar el cupo.");
+          abrirPantallaAgenda();
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        abrirPantallaAgenda();
+      });
+    }
+
+    function volverAlMenuDesdeAgenda() {
+      document.getElementById('pantallaAgenda').classList.add('oculto');
+      setTimeout(function() {
+        document.getElementById('pantallaMenu').style.visibility = 'visible';
+        document.getElementById('pantallaMenu').classList.remove('oculto');
+      }, 400);
+    }
+
+    // ==========================================
+    // SECCIÓN LIVES (CONECTADO A LA AGENDA AUTOMÁTICA)
     // ==========================================
     function abrirPantallaLives() {
       document.getElementById('pantallaMenu').classList.add('oculto');
@@ -421,53 +548,33 @@
 
     function cargarLives() {
       const contenedor = document.getElementById('contenedorListaLives');
-      
-      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Buscando agenda...</div>';
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Buscando transmisión actual...</div>';
 
-      fetch(`${URL_GOOGLE_SCRIPT}?obtenerStreamers=true`)
+      fetch(`${URL_GOOGLE_SCRIPT}?accion=obtener_lives_actuales`)
       .then(res => res.json())
-      .then(listaCanales => {
-        STREAMERS_COMUNIDAD = listaCanales || [];
-
-        if (STREAMERS_COMUNIDAD.length === 0) {
-          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
+      .then(listaStreamers => {
+        contenedor.innerHTML = ''; 
+        if (!listaStreamers || listaStreamers.length === 0) {
+          contenedor.innerHTML = '<div class="msg-vacio">Nadie agendado en este bloque</div>';
           return;
         }
 
-        const hashParams = new URLSearchParams(window.location.hash.replace('#', '?'));
-        let token = hashParams.get('access_token') || new URLSearchParams(window.location.search).get('access_token');
-        
-        let queryParams = STREAMERS_COMUNIDAD.map(s => `user_login=${s.toLowerCase()}`).join('&');
-
-        return fetch(`https://api.twitch.tv/helix/streams?${queryParams}`, {
-          headers: { 'Client-ID': CLIENT_ID, 'Authorization': 'Bearer ' + token }
-        });
-      })
-      .then(res => res ? res.json() : null)
-      .then(data => {
-        if (!data) return;
-        contenedor.innerHTML = ''; 
-        
-        if (data.data && data.data.length > 0) {
-          data.data.forEach(stream => {
-            let html = `
-            <div class="tarjeta-live">
-              <div>
-                <strong style="color:#fff; letter-spacing:1px; text-transform:uppercase; font-size:0.85rem;">${stream.user_name}</strong><br>
-                <span style="font-size:0.7rem; color:#dfb76c;">🟢 ${stream.viewer_count} Viendo - ${stream.game_name}</span>
-              </div>
-              <button class="btn-oro" style="padding:8px 15px; font-size:0.65rem;" onclick="seleccionarCanal('${stream.user_login}')">APOYAR</button>
+        listaStreamers.forEach(streamer => {
+          let html = `
+          <div class="tarjeta-live">
+            <div>
+              <strong style="color:#fff; letter-spacing:1px; text-transform:uppercase; font-size:0.85rem;">${streamer}</strong><br>
+              <span style="font-size:0.7rem; color:#dfb76c;">🟢 Horario Asignado Activo</span>
             </div>
-            `;
-            contenedor.innerHTML += html;
-          });
-        } else {
-          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
-        }
+            <button class="btn-oro" style="padding:8px 15px; font-size:0.65rem;" onclick="seleccionarCanal('${streamer.toLowerCase()}')">APOYAR</button>
+          </div>
+          `;
+          contenedor.innerHTML += html;
+        });
       })
       .catch(err => {
         console.error(err);
-        contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
+        contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiones</div>';
       });
     }
 
@@ -497,10 +604,6 @@
   </script>
 </body>
 </html>
-
-
-
-
 
 
 
