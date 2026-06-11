@@ -153,7 +153,7 @@
     .modal-txt { font-size: 1rem; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 25px; color: #ffffff; }
     .modal-botones { display: flex; justify-content: center; gap: 15px; }
     
-    /* LIVES DINÁMICOS */
+    /* LIVES DINÁMICOS Y TEXTOS DE CARGA */
     .lista-lives { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; max-height: 250px; overflow-y: auto; padding-right: 5px; }
     .tarjeta-live { background: rgba(20, 19, 17, 0.8); padding: 15px; border-radius: 6px; border: 1px solid rgba(223, 183, 108, 0.2); border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
     .msg-vacio { font-size: 0.9rem; color: #aaaaaa; letter-spacing: 2px; text-transform: uppercase; margin: 35px 0; font-style: italic; font-weight: 400; text-align: center; }
@@ -228,7 +228,7 @@
     let miNombreTwitch = "";
 
     // ==========================================
-    // MOTOR DE RAYOS EN CANVAS (MÁS RÁPIDOS Y FRECUENTES)
+    // MOTOR DE RAYOS EN CANVAS (MÁS ERRÁTICOS Y DIAGONALES)
     // ==========================================
     const canvas = document.getElementById('canvasRayos');
     const ctx = canvas.getContext('2d');
@@ -243,14 +243,21 @@
     function crearRayo(x1, y1, x2, y2, ramas) {
       let puntos = []; let x = x1; let y = y1;
       puntos.push({x: x, y: y});
-      let pasos = 25; let dx = (x2 - x1) / pasos; let dy = (y2 - y1) / pasos;
+      let pasos = 25; 
+      let dx = (x2 - x1) / pasos; 
+      let dy = (y2 - y1) / pasos;
       
       for (let i = 1; i < pasos; i++) {
-        x += dx + (Math.random() - 0.5) * 45; y += dy;
+        // Multiplicador aleatorio aumentado para hacer zigzags súper violentos y erráticos
+        x += dx + (Math.random() - 0.5) * 80; 
+        // Ligeros rebotes o pausas en el eje Y para que no sea una caída perfecta
+        y += dy + (Math.random() - 0.5) * 20; 
+        
         puntos.push({x: x, y: y});
-        // Probabilidad de ramificación aumentada para hacer la tormenta más salvaje
+        
+        // Ramas también se disparan en direcciones más salvajes
         if (ramas && Math.random() < 0.25) {
-          crearRayo(x, y, x + (Math.random() - 0.5) * 120, y + Math.random() * 80, false);
+          crearRayo(x, y, x + (Math.random() - 0.5) * 200, y + (Math.random() * 120), false);
         }
       }
       puntos.push({x: x2, y: y2});
@@ -267,14 +274,14 @@
     }
 
     function bucleTormenta() {
-      // Opacidad aumentada a 0.45 para que los rayos desaparezcan visualmente más rápido
       ctx.fillStyle = 'rgba(3, 3, 3, 0.45)'; 
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
-      // Probabilidad aumentada de 0.05 a 0.15 (Genera muchos más rayos continuos)
       if (Math.random() < 0.15) { 
         let xInicio = Math.random() * canvas.width;
-        crearRayo(xInicio, 0, xInicio + (Math.random() - 0.5) * (canvas.width * 0.4), canvas.height, true);
+        // xDestino ampliado masivamente para que el rayo cruce de lado a lado (esquinado)
+        let xDestino = xInicio + (Math.random() - 0.5) * (canvas.width * 1.8);
+        crearRayo(xInicio, 0, xDestino, canvas.height, true);
       }
       requestAnimationFrame(bucleTormenta);
     }
@@ -406,7 +413,7 @@
     }
 
     // ==========================================
-    // SECCIÓN LIVES (TEXTOS ORIGINALES)
+    // SECCIÓN LIVES (TEXTOS IGUALADOS EN TAMAÑO)
     // ==========================================
     function abrirPantallaLives() {
       document.getElementById('pantallaMenu').classList.add('oculto');
@@ -420,7 +427,8 @@
     function cargarLives() {
       const contenedor = document.getElementById('contenedorListaLives');
       
-      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; text-align:center;">Buscando agenda...</div>';
+      // Texto "Buscando agenda..." ajustado al tamaño y estilo exacto de "En espera..." pero manteniendo su color oro
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Buscando agenda...</div>';
 
       fetch(`${URL_GOOGLE_SCRIPT}?obtenerStreamers=true`)
       .then(res => res.json())
@@ -496,7 +504,7 @@
 </body>
 </html>
 
-
+   
 
 
 
