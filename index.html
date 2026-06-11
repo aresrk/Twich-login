@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -214,7 +213,7 @@
     </div>
   </div>
 
-  <script {sandbox=""}>
+  <script>
     const CLIENT_ID = 'hjf8kkt3r3qa6bdgvntkq7nga59fab'; 
     const REDIRECT_URI = 'https://aresrk.github.io/RXG-INDOMINUS-/'; 
     const SCOPES = 'moderator:read:chatters user:read:chat';
@@ -229,7 +228,7 @@
     let miNombreTwitch = "";
 
     // ==========================================
-    // MOTOR DE RAYOS EN CANVAS
+    // MOTOR DE RAYOS EN CANVAS (MÁS RÁPIDOS Y FRECUENTES)
     // ==========================================
     const canvas = document.getElementById('canvasRayos');
     const ctx = canvas.getContext('2d');
@@ -249,7 +248,8 @@
       for (let i = 1; i < pasos; i++) {
         x += dx + (Math.random() - 0.5) * 45; y += dy;
         puntos.push({x: x, y: y});
-        if (ramas && Math.random() < 0.18) {
+        // Probabilidad de ramificación aumentada para hacer la tormenta más salvaje
+        if (ramas && Math.random() < 0.25) {
           crearRayo(x, y, x + (Math.random() - 0.5) * 120, y + Math.random() * 80, false);
         }
       }
@@ -267,8 +267,12 @@
     }
 
     function bucleTormenta() {
-      ctx.fillStyle = 'rgba(3, 3, 3, 0.28)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-      if (Math.random() < 0.05) { 
+      // Opacidad aumentada a 0.45 para que los rayos desaparezcan visualmente más rápido
+      ctx.fillStyle = 'rgba(3, 3, 3, 0.45)'; 
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      // Probabilidad aumentada de 0.05 a 0.15 (Genera muchos más rayos continuos)
+      if (Math.random() < 0.15) { 
         let xInicio = Math.random() * canvas.width;
         crearRayo(xInicio, 0, xInicio + (Math.random() - 0.5) * (canvas.width * 0.4), canvas.height, true);
       }
@@ -402,7 +406,7 @@
     }
 
     // ==========================================
-    // SECCIÓN LIVES (CON ESTILO ORIGINAL RESTAURADO)
+    // SECCIÓN LIVES (TEXTOS ORIGINALES)
     // ==========================================
     function abrirPantallaLives() {
       document.getElementById('pantallaMenu').classList.add('oculto');
@@ -415,8 +419,8 @@
 
     function cargarLives() {
       const contenedor = document.getElementById('contenedorListaLives');
-      // Mensaje de carga con estilo y color original
-      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; text-align:center;">Buscando transmisiones...</div>';
+      
+      contenedor.innerHTML = '<div style="color:#dfb76c; font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; text-align:center;">Buscando agenda...</div>';
 
       fetch(`${URL_GOOGLE_SCRIPT}?obtenerStreamers=true`)
       .then(res => res.json())
@@ -424,7 +428,7 @@
         STREAMERS_COMUNIDAD = listaCanales || [];
 
         if (STREAMERS_COMUNIDAD.length === 0) {
-          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiones</div>';
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
           return;
         }
 
@@ -444,7 +448,6 @@
         
         if (data.data && data.data.length > 0) {
           data.data.forEach(stream => {
-            // Se inyecta la estructura HTML exacta del diseño original 
             let html = `
             <div class="tarjeta-live">
               <div>
@@ -457,12 +460,12 @@
             contenedor.innerHTML += html;
           });
         } else {
-          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiones</div>';
+          contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
         }
       })
       .catch(err => {
         console.error(err);
-        contenedor.innerHTML = '<div class="msg-vacio">Error al conectar con los servidores.</div>';
+        contenedor.innerHTML = '<div class="msg-vacio">En espera de transmisiónes</div>';
       });
     }
 
@@ -470,7 +473,7 @@
       canalSeleccionado = canal;
       alert(`¡Rastreador enlazado a ${canal.toUpperCase()}! Se abrirá su canal; mantén interactivo el chat para registrar tus puntos de forma continua.`);
       conectarEscuchaChat(canal); 
-      window.open(`https://twitch.tv/${canal}`, '_blank'); // Abre el stream en pestaña nueva (Original)
+      window.open(`https://twitch.tv/${canal}`, '_blank'); 
       volverAlMenuDesdeLives();   
     }
 
@@ -492,28 +495,6 @@
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
