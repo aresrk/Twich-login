@@ -448,15 +448,18 @@
       document.getElementById('pantallaMenu').classList.add('oculto');
       document.getElementById('contenedorListaAgenda').innerHTML = '<div style="color:#dfb76c; font-size:0.9rem; text-transform:uppercase; letter-spacing:2px; text-align:center; margin:35px 0; font-style:italic; font-weight:400;">Sincronizando reloj...</div>';
       
+      // Mostrar la pantalla INMEDIATAMENTE igual que en los Lives
+      setTimeout(function() {
+        document.getElementById('pantallaAgenda').style.visibility = 'visible';
+        document.getElementById('pantallaAgenda').classList.remove('oculto');
+      }, 400);
+
+      // Cargar los datos de fondo sin hacer esperar a la animación
       fetch(`${URL_GOOGLE_SCRIPT}?accion=obtener_agenda`)
       .then(res => res.json())
       .then(data => {
         datosAgendaGlobal = data;
         renderizarHorasAgenda();
-        setTimeout(function() {
-          document.getElementById('pantallaAgenda').style.visibility = 'visible';
-          document.getElementById('pantallaAgenda').classList.remove('oculto');
-        }, 400);
       })
       .catch(err => {
         console.error(err);
@@ -616,9 +619,6 @@
   </script>
 </body>
 </html>
-
-
-
 
 
 
