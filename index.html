@@ -8,7 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght=200;400;600;800&display=swap" rel="stylesheet">
   
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* Adiós al brillo azul de Google al tocar botones en móviles */
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    button, a { outline: none; }
     
     body {
       font-family: 'Montserrat', sans-serif;
@@ -74,6 +76,16 @@
     }
     .btn-oro:hover { transform: translateY(-2px); box-shadow: 0 0 30px rgba(223, 183, 108, 0.6); background: linear-gradient(135deg, #f9e7c4 0%, #dfb76c 100%); }
     
+    /* EFECTO "BOTÓN APAGADO" AL PRESIONAR */
+    .btn-oro:active {
+      background: linear-gradient(135deg, #1f1d19 0%, #11100e 100%) !important; /* Gris carbón mate */
+      color: #4a4a4a !important; /* Letra apagada */
+      box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.8) !important; /* Efecto hundido */
+      transform: translateY(2px) scale(0.96) !important;
+      border: 1px solid rgba(223, 183, 108, 0.1);
+      transition: all 0.05s ease; /* Transición ultra rápida al tocar */
+    }
+    
     /* PERFIL */
     .perfil-contenedor {
       display: flex; flex-direction: column; align-items: center; margin-bottom: 10px;
@@ -118,7 +130,7 @@
     }
     .menu-linea { width: 60px; height: 2px; background: linear-gradient(90deg, transparent, #dfb76c, transparent); margin: 15px auto 30px auto; }
     
-    /* BOTONES */
+    /* BOTONES DEL PANEL */
     .fila-opciones { display: flex; flex-direction: column; gap: 12px; width: 100%; }
     @media (min-width: 480px) { .fila-opciones { flex-direction: row; flex-wrap: wrap; justify-content: center; } }
 
@@ -133,6 +145,27 @@
       color: #dfb76c; border-color: #dfb76c; background: rgba(223, 183, 108, 0.08); 
       transform: translateY(-2px); box-shadow: 0 6px 20px rgba(223, 183, 108, 0.15); 
     }
+    
+    /* EFECTO AL PRESIONAR BOTONES DEL PANEL */
+    .btn-opcion:active {
+      transform: scale(0.96); background: rgba(10, 10, 10, 0.9); border-color: #444; color: #555;
+      transition: all 0.05s ease;
+    }
+
+    /* NUEVOS BOTONES DE DÍAS (SELECTOR AGENDA) */
+    .contenedor-dias { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .btn-dia {
+      background: rgba(20, 19, 17, 0.7); border: 1px solid rgba(223, 183, 108, 0.2); color: #8c8c8c;
+      padding: 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; letter-spacing: 1px;
+      cursor: pointer; text-transform: uppercase; transition: all 0.3s ease;
+      flex: 1 1 25%; max-width: 30%;
+    }
+    .btn-dia:hover { background: rgba(223, 183, 108, 0.1); color: #dddddd; }
+    .btn-dia.activo {
+      background: rgba(223, 183, 108, 0.15); border-color: #dfb76c; color: #dfb76c;
+      box-shadow: 0 4px 15px rgba(223, 183, 108, 0.2);
+    }
+    .btn-dia:active { transform: scale(0.92); background: #111; border-color: #333; transition: all 0.05s ease;}
     
     /* CERRAR SESIÓN FLOTANTE */
     .btn-logout {
@@ -154,7 +187,7 @@
     .modal-botones { display: flex; justify-content: center; gap: 15px; }
     
     /* LIVES DINÁMICOS Y TEXTOS DE CARGA */
-    .lista-lives { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; text-align: left; max-height: 250px; overflow-y: auto; padding-right: 5px; }
+    .lista-lives { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; text-align: left; max-height: 250px; overflow-y: auto; padding-right: 5px; }
     .tarjeta-live { background: rgba(20, 19, 17, 0.8); padding: 15px; border-radius: 6px; border: 1px solid rgba(223, 183, 108, 0.2); border-left: 4px solid #dfb76c; display: flex; justify-content: space-between; align-items: center; }
     .msg-vacio { font-size: 0.9rem; color: #aaaaaa; letter-spacing: 2px; text-transform: uppercase; margin: 35px 0; font-style: italic; font-weight: 400; text-align: center; }
   </style>
@@ -206,16 +239,16 @@
   <div id="pantallaAgenda" class="pantalla oculto">
     <div class="menu-titulo" style="font-size: 1.4rem;">Agenda Semanal</div>
     <div class="menu-linea" style="margin-bottom: 15px;"></div>
-    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Selecciona un día (Horarios adaptados a tu reloj local):</p>
+    <p style="font-size: 0.75rem; color: #aaa; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase;">Selecciona un día (Horario adaptado a tu reloj local):</p>
     
-    <select id="agendaDiaSelect" class="btn-opcion" style="width: 100%; margin-bottom: 20px; text-align: center; text-align-last: center;" onchange="renderizarHorasAgenda()">
-      <option value="Lunes">Lunes</option>
-      <option value="Martes">Martes</option>
-      <option value="Miércoles">Miércoles</option>
-      <option value="Jueves">Jueves</option>
-      <option value="Viernes">Viernes</option>
-      <option value="Sábado">Sábado</option>
-    </select>
+    <div id="selectorDiasAgenda" class="contenedor-dias">
+      <button class="btn-dia activo" onclick="cambiarDiaAgenda('Lunes', this)">LUN</button>
+      <button class="btn-dia" onclick="cambiarDiaAgenda('Martes', this)">MAR</button>
+      <button class="btn-dia" onclick="cambiarDiaAgenda('Miércoles', this)">MIÉ</button>
+      <button class="btn-dia" onclick="cambiarDiaAgenda('Jueves', this)">JUE</button>
+      <button class="btn-dia" onclick="cambiarDiaAgenda('Viernes', this)">VIE</button>
+      <button class="btn-dia" onclick="cambiarDiaAgenda('Sábado', this)">SÁB</button>
+    </div>
 
     <div id="contenedorListaAgenda" class="lista-lives" style="max-height: 280px;"></div>
     
@@ -245,6 +278,7 @@
     let miUsuarioId = ""; 
     let miNombreTwitch = "";
     let datosAgendaGlobal = {};
+    let diaAgendaSeleccionado = 'Lunes'; // Controla la pestaña activa
 
     // ==========================================
     // MOTOR DE RAYOS EN CANVAS
@@ -460,8 +494,17 @@
       });
     }
 
+    // Función para manejar el cambio visual de las pestañas de días
+    function cambiarDiaAgenda(dia, botonElemento) {
+      diaAgendaSeleccionado = dia;
+      const botones = document.querySelectorAll('.btn-dia');
+      botones.forEach(b => b.classList.remove('activo'));
+      botonElemento.classList.add('activo');
+      renderizarHorasAgenda();
+    }
+
     function renderizarHorasAgenda() {
-      const dia = document.getElementById('agendaDiaSelect').value;
+      const dia = diaAgendaSeleccionado;
       const contenedor = document.getElementById('contenedorListaAgenda');
       contenedor.innerHTML = '';
       
@@ -604,6 +647,7 @@
   </script>
 </body>
 </html>
+
 
 
 
